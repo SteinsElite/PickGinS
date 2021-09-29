@@ -1,0 +1,73 @@
+info:
+  contact: {}
+paths:
+  /api/v1/chart/profit:
+    get:
+      parameters:
+      - description: the duration to query-{7D,1M,1Y}
+        in: query
+        name: range
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: the profit point
+      summary: get the phased profit info
+  /api/v1/chart/ratio:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: get the ratio info
+  /api/v1/chart/volume:
+    get:
+      parameters:
+      - description: the duration to query-{7D,1M,1Y}
+        in: query
+        name: range
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: get the total volume info
+  /api/v1/transaction/{address}:
+    get:
+      parameters:
+      - description: user account address
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: 'tag of the transaction: {deposit,withdraw,claimProfit}, if not
+          specify, get all the category'
+        in: query
+        name: tag
+        type: string
+      - description: inde of page
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: size of each page
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: the transaction of the page
+      summary: get the transaction info
+swagger: "2.0"

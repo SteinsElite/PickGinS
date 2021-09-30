@@ -14,7 +14,7 @@ import (
 // The Api Function to interact with the transaction module
 
 func LoadTxFromDb(page, pageSize int64, tag string, address string) []TxRecord {
-	coll := storage.AccessCollections(txColl)
+	coll := storage.AccessCollections(transaction.txColl)
 	findOpt := options.Find()
 	findOpt.SetLimit(pageSize)
 	findOpt.SetSkip((page - 1) * pageSize)
@@ -47,14 +47,14 @@ func LoadTxFromDb(page, pageSize int64, tag string, address string) []TxRecord {
 // note: this func will blocking the main goroutine, so it should start in a standlone goroutine
 func PollTxInterval() {
 	initr := InitRecordObserver()
-	timeTicker := time.NewTicker(interval * time.Second)
+	timeTicker := time.NewTicker(transaction.interval * time.Second)
 	for {
 		latestBlockNumber, err := initr.rpcClient().BlockNumber(context.TODO())
 		if err != nil {
 			log.Println("fail to get the block number", err)
 		} else {
 			tx := initr.ObtainTxUntil(int64(latestBlockNumber))
-			persistRecord(tx)
+			transaction.persistRecord(tx)
 		}
 		<-timeTicker.C
 	}

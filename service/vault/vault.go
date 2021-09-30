@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"fmt"
+	"github.com/SteinsElite/pickGinS/types"
 	"log"
 	"math"
 	"math/big"
@@ -14,7 +15,6 @@ import (
 	"github.com/SteinsElite/pickGinS/internal/coin"
 	"github.com/SteinsElite/pickGinS/internal/gateway"
 	"github.com/SteinsElite/pickGinS/internal/storage"
-	"github.com/SteinsElite/pickGinS/internal/token"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/robfig/cron/v3"
 )
@@ -25,10 +25,9 @@ const (
 	decimal = 18
 )
 const (
-	Week         = "7D"
-	Month        = "1M"
-	Year         = "1Y"
-	OneDayBefore = -24 * time.Hour
+	Week  = "7D"
+	Month = "1M"
+	Year  = "1Y"
 )
 
 type ValuePair struct {
@@ -38,15 +37,15 @@ type ValuePair struct {
 
 var vaultWatcher *VaultWatcher
 
-// the vault status on the contract
+// VaultStats the vault status on the contract
 type VaultStats struct {
 	TimeStamp  int64
 	CoinAmount map[string]float64
 	Profit     float64
 }
 
-// use cron to poll the vault info at everyday UTC midnight 00:00:00 and every 30 min to
-// maintain the vault status
+// RunVaultWatcher use cron to poll the vault info at everyday UTC midnight 00:00:00 and every 30
+//min to maintain the vault status
 func RunVaultWatcher() {
 
 	initVaultWatcher()
@@ -115,11 +114,11 @@ func (vw *VaultWatcher) profitAmount() float64 {
 func (vw *VaultWatcher) VaultStatsFromChain() (stats VaultStats) {
 	stats.Profit = vw.profitAmount()
 	stats.CoinAmount = make(map[string]float64)
-	stats.CoinAmount[token.BTC] = vw.tokenAmount(token.BTCAddr)
-	stats.CoinAmount[token.ETH] = vw.tokenAmount(token.ETHAddr)
-	stats.CoinAmount[token.USDT] = vw.tokenAmount(token.USDTAddr)
-	stats.CoinAmount[token.HT] = vw.tokenAmount(token.HTAddr)
-	stats.CoinAmount[token.MDX] = vw.tokenAmount(token.MDXAddr)
+	stats.CoinAmount[_type.BTC] = vw.tokenAmount(_type.BTCAddr)
+	stats.CoinAmount[_type.ETH] = vw.tokenAmount(_type.ETHAddr)
+	stats.CoinAmount[_type.USDT] = vw.tokenAmount(_type.USDTAddr)
+	stats.CoinAmount[_type.HT] = vw.tokenAmount(_type.HTAddr)
+	stats.CoinAmount[_type.MDX] = vw.tokenAmount(_type.MDXAddr)
 	return
 }
 
@@ -165,7 +164,7 @@ func getQualifiedStatsFromDb(phase string) []VaultStats {
 func volumeValue(stats VaultStats) float64 {
 	var totalValue float64
 	for k, amount := range stats.CoinAmount {
-		ids, _ := token.TokenIds(k)
+		ids, _ := _type.TokenIds(k)
 		totalValue += amount * coin.GetCurrentCoinPrice(ids)
 	}
 	return totalValue
@@ -236,7 +235,7 @@ func getQulifiedProfitFromDb(phase string) []ValuePair {
 	return profits
 }
 func profitValue(amount float64) float64 {
-	return amount * coin.GetCurrentCoinPrice(token.MDXIds)
+	return amount * coin.GetCurrentCoinPrice(_type.MDXIds)
 }
 
 func midnightOfDay(t time.Time) time.Time {

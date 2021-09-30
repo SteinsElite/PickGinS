@@ -3,20 +3,19 @@ package coin
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/SteinsElite/pickGinS/types"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/SteinsElite/pickGinS/internal/token"
 )
 
 // This is a service response for maintain the cache of the price
 const (
 	endpoint = "https://api.coingecko.com/api/v3"
 
-	price_interval = 60 * 60 // 1 hour
+	priceInterval = 60 * 60 // 1 hour
 
 	trendDays     = "1"
 	trendInterval = "hourly"
@@ -38,7 +37,7 @@ type CoinInfo struct {
 	Trend []float64 `json:"trend"`
 }
 
-// client to interact with the gecko api to get price info
+// CoinClient client to interact with the gecko api to get price info
 type CoinClient struct {
 	httpClient *http.Client
 	CoinCache  map[string]CoinInfo
@@ -46,11 +45,11 @@ type CoinClient struct {
 
 func NewCoinClient() *CoinClient {
 	coinCache := map[string]CoinInfo{
-		token.BTCIds:  {Price: 41749.32},
-		token.ETHIds:  {Price: 2898.42},
-		token.USDTIds: {Price: 1.0},
-		token.HTIds:   {Price: 7.73},
-		token.MDXIds:  {Price: 1.12},
+		_type.BTCIds:  {Price: 41749.32},
+		_type.ETHIds:  {Price: 2898.42},
+		_type.USDTIds: {Price: 1.0},
+		_type.HTIds:   {Price: 7.73},
+		_type.MDXIds:  {Price: 1.12},
 	}
 	return &CoinClient{
 		httpClient: &http.Client{},
@@ -92,7 +91,7 @@ func (c *CoinClient) MakeReq(url string) ([]byte, error) {
 func (c *CoinClient) SimplePrice(ids string) (map[string]map[string]float64, error) {
 	params := url.Values{}
 	params.Add("ids", ids)
-	params.Add("vs_currencies", token.Vs_currency)
+	params.Add("vs_currencies", _type.Vs_currency)
 	params.Add("include_24hr_change", "true")
 	url := fmt.Sprintf("%s/simple/price?%s", endpoint, params.Encode())
 
@@ -111,7 +110,7 @@ func (c *CoinClient) SimplePrice(ids string) (map[string]map[string]float64, err
 
 func (c *CoinClient) CoinsMarketChart(ids string) (*CoinsMarketChart, error) {
 	params := url.Values{}
-	params.Add("vs_currency", token.Vs_currency)
+	params.Add("vs_currency", _type.Vs_currency)
 	params.Add("days", trendDays)
 	params.Add("interval", trendInterval)
 
@@ -145,7 +144,7 @@ func (c *CoinClient) GetLatestCoinInfo(ids string) (CoinInfo, error) {
 		trend = append(trend, (*trendInfo.Prices)[i][1])
 	}
 	coinInfo := CoinInfo{
-		Price: priceInfo[ids][token.Vs_currency],
+		Price: priceInfo[ids][_type.Vs_currency],
 		Rate:  priceInfo[ids]["usd_24h_change"],
 		Trend: trend,
 	}
@@ -166,7 +165,7 @@ func (c *CoinClient) updateCoinInfo() {
 // standlone goroutine, and it should start before the time ticker
 func RunCoinInfoWatcher() {
 	InitCoinClient()
-	timeTicker := time.NewTicker(price_interval * time.Second)
+	timeTicker := time.NewTicker(priceInterval * time.Second)
 	for {
 		coinClient.updateCoinInfo()
 		<-timeTicker.C

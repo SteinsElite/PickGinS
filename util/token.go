@@ -1,19 +1,29 @@
-package token
+package util
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// address of the Heco-peg assets
+// token.go is some common def and util to deal with token on heco
+
+// address of the Heco-peg assets(should never change)
 var (
-	MDXAddr  = common.HexToAddress("0x25d2e80cb6b86881fd7e07dd263fb79f4abe033c")
+	BTCAddr  = common.HexToAddress("0x66a79d23e58475d2738179ca52cd0b41d73f0bea")
+	ETHAddr  = common.HexToAddress("0x64ff637fb478863b7468bc97d30a5bf3a428a1fd")
 	USDTAddr = common.HexToAddress("0xa71edc38d189767582c38a3145b5873052c3e47a")
 	HTAddr   = common.HexToAddress("0x5545153CCFcA01fbd7Dd11C0b23ba694D9509A6F")
-	ETHAddr  = common.HexToAddress("0x64ff637fb478863b7468bc97d30a5bf3a428a1fd")
-	BTCAddr  = common.HexToAddress("0x66a79d23e58475d2738179ca52cd0b41d73f0bea")
+	MDXAddr  = common.HexToAddress("0x25d2e80cb6b86881fd7e07dd263fb79f4abe033c")
+)
+
+// symbol of token
+const (
+	BTC  = "BTC"
+	ETH  = "ETH"
+	USDT = "USDT"
+	HT   = "HT"
+	MDX  = "MDX"
 )
 
 // ids to query info from 3rd-party price-info api
@@ -26,16 +36,7 @@ const (
 	Vs_currency = "usd"
 )
 
-// token symbol of the assets
-const (
-	BTC  = "BTC"
-	ETH  = "ETH"
-	USDT = "USDT"
-	HT   = "HT"
-	MDX  = "MDX"
-)
-
-// Identify the token by address on the heco
+// IdentifyToken convert token address ==> token symbol
 func IdentifyToken(token common.Address) (string, error) {
 	var tokenType string
 	switch token {
@@ -50,7 +51,7 @@ func IdentifyToken(token common.Address) (string, error) {
 	case BTCAddr:
 		tokenType = BTC
 	default:
-		return tokenType, errors.New("unsupported token address")
+		return tokenType, fmt.Errorf("unknown token address")
 	}
 	return tokenType, nil
 }

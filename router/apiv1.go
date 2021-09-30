@@ -1,11 +1,12 @@
 package router
 
 import (
+	"github.com/SteinsElite/pickGinS/service/transaction"
+	vault2 "github.com/SteinsElite/pickGinS/service/vault"
+	"github.com/SteinsElite/pickGinS/types"
 	"strconv"
 
 	"github.com/SteinsElite/pickGinS/internal/coin"
-	"github.com/SteinsElite/pickGinS/internal/token"
-	"github.com/SteinsElite/pickGinS/internal/transaction"
 	"github.com/SteinsElite/pickGinS/internal/vault"
 	"github.com/gin-gonic/gin"
 )
@@ -85,7 +86,7 @@ func GetVolume(c *gin.Context) {
 			"message": "range should be one of {7D,1M,1Y}",
 		})
 	}
-	values := vault.PhasedVolume(phase)
+	values := vault2.PhasedVolume(phase)
 	c.JSON(200, gin.H{
 		"points": values,
 	})
@@ -105,7 +106,7 @@ func GetProfit(c *gin.Context) {
 			"message": "range should be one of {7D,1M,1Y}",
 		})
 	}
-	values := vault.PhasedProfit(phase)
+	values := vault2.PhasedProfit(phase)
 	c.JSON(200, gin.H{
 		"points": values,
 	})
@@ -117,7 +118,7 @@ func GetProfit(c *gin.Context) {
 // @Success 200 "amount of each asset in usd"
 // @Router /api/v1/chart/ratio [get]
 func GetRatio(c *gin.Context) {
-	values := vault.AssetRatio()
+	values := vault2.AssetRatio()
 	c.JSON(200, gin.H{
 		"ratio": values,
 	})
@@ -131,6 +132,6 @@ func GetRatio(c *gin.Context) {
 func GetCoinPriceInfo(c *gin.Context) {
 	id := c.Param("coin_ids")
 
-	ids, _ := token.TokenIds(id)
+	ids, _ := _type.TokenIds(id)
 	c.JSON(200, coin.GetCoinTrend(ids))
 }

@@ -3,6 +3,7 @@ package transaction
 import (
 	"context"
 	"fmt"
+	"github.com/SteinsElite/pickGinS/types"
 	"log"
 	"math"
 	"math/big"
@@ -11,8 +12,6 @@ import (
 	"github.com/SteinsElite/pickGinS/internal/gateway"
 	"github.com/SteinsElite/pickGinS/internal/gateway/pickrouter"
 	"github.com/SteinsElite/pickGinS/internal/storage"
-	"github.com/SteinsElite/pickGinS/internal/token"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -26,9 +25,9 @@ import (
 const (
 	decimal = 18
 	// the interval that heco mine new block
-	hecoBatach = 3
-	interval   = hecoBatach * 3
-	// indicate that the block that the pickRouter contract deploy tranassction is included
+	heckBatch = 3
+	interval  = heckBatch * 3
+	// indicate that the block that the pickRouter contract deploy transaction is included
 	geniusBlock = 8121824
 	hecoLimit   = 5000
 	txColl      = "transaction"
@@ -40,13 +39,13 @@ var (
 	claimProfitSigHash = crypto.Keccak256Hash([]byte("ClaimProfit(address,address,uint256)"))
 )
 
-type TransactionType string
-
 const (
-	Deposit     TransactionType = "deposit"
-	Withdraw    TransactionType = "withdraw"
-	ClaimProfit TransactionType = "claimProfit"
+	Deposit     Type = "deposit"
+	Withdraw    Type = "withdraw"
+	ClaimProfit Type = "claimProfit"
 )
+
+type Type string
 
 type BlockSpan struct {
 	FromBlock int64
@@ -54,17 +53,32 @@ type BlockSpan struct {
 }
 
 type TxRecord struct {
-	TxHash      string          `json:"tx_hash" bson:"tx_hash"`
-	BlockNumber uint64          `json:"block_number" bson:"block_number"`
-	Timestamp   uint64          `json:"timestamp" bson:"timestamp"`
-	TxType      TransactionType `json:"txtype" bson:"txtype"`
-	User        string          `json:"user" bson:"user"`
-	Token       string          `json:"token" bson:"token"`
-	Amount      float64         `json:"amount" bson:"amount"`
+	TxHash      string  `json:"tx_hash" bson:"tx_hash"`
+	BlockNumber uint64  `json:"block_number" bson:"block_number"`
+	Timestamp   uint64  `json:"timestamp" bson:"timestamp"`
+	TxType      Type    `json:"tx_type" bson:"tx_type"`
+	User        string  `json:"user" bson:"user"`
+	Token       string  `json:"token" bson:"token"`
+	Amount      float64 `json:"amount" bson:"amount"`
 }
 
-func InitRecordObserver() *RecordObserver {
+type TxWatcher struct {
+	client       *gateway.RpcClient
+	CurrentBlock int64 // indicate the last block that has been processed
+}
+
+func newTxWatcher(currentBlock int64) *TxWatcher {
+	return &TxWatcher{
+		client:       gateway.GetRpcClient(),
+		CurrentBlock: currentBlock,
+	}
+}
+
+// if
+func InitTxWatcher() *TxWatcher {
 	coll := storage.AccessCollections(txColl)
+
+	// get the tx record with the biggest block number in the database
 	findOpt := options.Find()
 	findOpt.SetSort(bson.D{{"block_number", -1}})
 	findOpt.SetLimit(1)
@@ -78,6 +92,7 @@ func InitRecordObserver() *RecordObserver {
 		log.Println(err)
 	}
 	defer cur.Close(context.TODO())
+
 	var record TxRecord
 	if cur.Next(context.TODO()) {
 		err := cur.Decode(&record)
@@ -85,42 +100,31 @@ func InitRecordObserver() *RecordObserver {
 			log.Println(err)
 		}
 		currentBlock := int64(record.BlockNumber) + 1
-		return newRecordObserver(currentBlock)
+		return newTxWatcher(currentBlock)
 	}
-	return GenesisRecordObserver()
+	return GenesisTxWatcher()
 }
 
-type RecordObserver struct {
-	client       *gateway.RpcClient
-	CurrentBlock int64
-}
 
-func newRecordObserver(currentBlock int64) *RecordObserver {
-	return &RecordObserver{
-		client:       gateway.GetRpcClient(),
-		CurrentBlock: currentBlock,
-	}
-}
-
-// When the first time to start the app, we should query start form the genesis
+// GenesisTxWatcher When the first time to start the app, we should query start form the genesis
 // contract created block number
-func GenesisRecordObserver() *RecordObserver {
-	return newRecordObserver(geniusBlock)
+func GenesisTxWatcher() *TxWatcher {
+	return newTxWatcher(geniusBlock)
 }
 
-func (ro *RecordObserver) contractAddr() common.Address {
+func (ro *TxWatcher) contractAddr() common.Address {
 	return ro.client.ContractAddr
 }
 
-func (ro *RecordObserver) rpcClient() *ethclient.Client {
+func (ro *TxWatcher) rpcClient() *ethclient.Client {
 	return ro.client.Client
 }
 
-func (ro *RecordObserver) instance() *pickrouter.Pickrouter {
+func (ro *TxWatcher) instance() *pickrouter.Pickrouter {
 	return ro.client.Instance
 }
 
-func (ro *RecordObserver) ObtainTxUntil(toblk int64) (txs []TxRecord) {
+func (ro *TxWatcher) ObtainTxUntil(toblk int64) (txs []TxRecord) {
 	var blockSpans []BlockSpan
 	for startblk := ro.CurrentBlock; startblk <= toblk; startblk += hecoLimit {
 		endBlk := startblk + hecoLimit - 1
@@ -152,7 +156,7 @@ func (ro *RecordObserver) ObtainTxUntil(toblk int64) (txs []TxRecord) {
 
 // get all the required logs in range [fromblk,toblk],make sure that toblk-fromblk is less that
 // 5000 due to heco node limit
-func (ro *RecordObserver) obtainTxRange(span BlockSpan) ([]TxRecord, error) {
+func (ro *TxWatcher) obtainTxRange(span BlockSpan) ([]TxRecord, error) {
 	var txs []TxRecord
 
 	query := ethereum.FilterQuery{
@@ -177,7 +181,7 @@ func (ro *RecordObserver) obtainTxRange(span BlockSpan) ([]TxRecord, error) {
 	return txs, nil
 }
 
-func (ro *RecordObserver) populateTxFromLog(vlog types.Log) (TxRecord, error) {
+func (ro *TxWatcher) populateTxFromLog(vlog types.Log) (TxRecord, error) {
 	var tx TxRecord
 
 	switch vlog.Topics[0].Hex() {
@@ -188,7 +192,7 @@ func (ro *RecordObserver) populateTxFromLog(vlog types.Log) (TxRecord, error) {
 			return tx, err
 		}
 		tx.User = deposit.User.String()
-		tx.Token, _ = token.IdentifyToken(deposit.Token)
+		tx.Token, _ = _type.IdentifyToken(deposit.Token)
 		tx.Amount = UnitConvert(deposit.Value)
 
 	case withdrawSigHash.Hex():
@@ -198,7 +202,7 @@ func (ro *RecordObserver) populateTxFromLog(vlog types.Log) (TxRecord, error) {
 			return tx, err
 		}
 		tx.User = withdraw.User.String()
-		tx.Token, _ = token.IdentifyToken(withdraw.Token)
+		tx.Token, _ = _type.IdentifyToken(withdraw.Token)
 		tx.Amount = UnitConvert(withdraw.Value)
 
 	case claimProfitSigHash.Hex():
@@ -208,7 +212,7 @@ func (ro *RecordObserver) populateTxFromLog(vlog types.Log) (TxRecord, error) {
 			return tx, err
 		}
 		tx.User = claimProfit.User.String()
-		tx.Token, _ = token.IdentifyToken(claimProfit.Token)
+		tx.Token, _ = _type.IdentifyToken(claimProfit.Token)
 		tx.Amount = UnitConvert(claimProfit.Value)
 	default:
 		return TxRecord{}, fmt.Errorf("unmatched event")

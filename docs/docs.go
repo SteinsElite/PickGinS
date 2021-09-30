@@ -40,7 +40,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "the profit point"
+                        "description": "the [(timetsamp,profit)] in the time range"
                     }
                 }
             }
@@ -53,10 +53,7 @@ var doc = `{
                 "summary": "get the ratio info",
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "amount of each asset in usd"
                     }
                 }
             }
@@ -78,10 +75,28 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "the [(timestamp,volume)] in the time range"
+                    }
+                }
+            }
+        },
+        "/api/v1/price_info/{coin_ids}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "{BTC,ETH,USDT,HT,MDX}",
+                        "name": "coin_ids",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "the price trend of coin, {\"rate\": ..., \"trend\": ...}"
                     }
                 }
             }
@@ -102,13 +117,13 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "tag of the transaction: {deposit,withdraw,claimProfit}, if not specify, get all the category",
+                        "description": "tag of the transaction-{deposit,withdraw,claimProfit}, if not specify, get all the category",
                         "name": "tag",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "inde of page",
+                        "description": "index of page",
                         "name": "page",
                         "in": "query",
                         "required": true

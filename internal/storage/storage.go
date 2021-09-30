@@ -17,7 +17,7 @@ import (
 const (
 	timeout      = 10
 	pingInterval = 5
-	mongouri     = "mongodb://localhost:20919"
+	mongouri     = "mongodb://localhost:27017"
 	dbname       = "pick"
 	maxpoolsize  = 100
 )

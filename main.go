@@ -12,5 +12,5 @@ func main() {
 	go coin.RunCoinInfoWatcher()
 	go vault.RunVaultWatcher()
 	r := router.SetupGinServer()
-	r.Run(":8090")
+	r.Run(":8080")
 }

@@ -52,7 +52,7 @@ func RunVaultWatcher() {
 	initVaultWatcher()
 	c := cron.New()
 
-	_, err := c.AddFunc("CRON_TZ=UTC @every 10s", func() {
+	_, err := c.AddFunc("CRON_TZ=UTC @daily", func() {
 		timestamp := time.Now().Unix()
 		vaultStats := vaultWatcher.VaultStatsFromChain()
 		vaultStats.TimeStamp = timestamp

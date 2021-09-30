@@ -3,6 +3,8 @@ package router
 import (
 	"strconv"
 
+	"github.com/SteinsElite/pickGinS/internal/coin"
+	"github.com/SteinsElite/pickGinS/internal/token"
 	"github.com/SteinsElite/pickGinS/internal/transaction"
 	"github.com/SteinsElite/pickGinS/internal/vault"
 	"github.com/gin-gonic/gin"
@@ -30,8 +32,8 @@ func validTag(tag string) bool {
 // @Produce  json
 // @Success 200 "the transaction of the page"
 // @Param address path string true "user account address"
-// @Param tag query string false "tag of the transaction: {deposit,withdraw,claimProfit}, if not specify, get all the category"
-// @Param page query int true "inde of page"
+// @Param tag query string false "tag of the transaction-{deposit,withdraw,claimProfit}, if not specify, get all the category"
+// @Param page query int true "index of page"
 // @Param page_size query int true "size of each page"
 // @Router /api/v1/transaction/{address} [get]
 func GetTransaction(c *gin.Context) {
@@ -72,7 +74,7 @@ func GetSpecificAnn(c *gin.Context) {
 // GetVolume godoc
 // @Summary get the total volume info
 // @Produce  json
-// @Success 200 {string} json
+// @Success 200 "the [(timestamp,volume)] in the time range"
 // @Param range query string true "the duration to query-{7D,1M,1Y}"
 // @Router /api/v1/chart/volume [get]
 func GetVolume(c *gin.Context) {
@@ -92,7 +94,7 @@ func GetVolume(c *gin.Context) {
 // GetProfit godoc
 // @Summary get the phased profit info
 // @Produce  json
-// @Success 200 "the profit point"
+// @Success 200 "the [(timetsamp,profit)] in the time range"
 // @Param range query string true "the duration to query-{7D,1M,1Y}"
 // @Router /api/v1/chart/profit [get]
 func GetProfit(c *gin.Context) {
@@ -112,11 +114,23 @@ func GetProfit(c *gin.Context) {
 // GetRatio godoc
 // @Summary get the ratio info
 // @Produce  json
-// @Success 200 {string} json
+// @Success 200 "amount of each asset in usd"
 // @Router /api/v1/chart/ratio [get]
 func GetRatio(c *gin.Context) {
 	values := vault.AssetRatio()
 	c.JSON(200, gin.H{
 		"ratio": values,
 	})
+}
+
+//@Sunmmary get the Coin Price info and trend
+//@Produce json
+//@Param coin_ids path string true "{BTC,ETH,USDT,HT,MDX}"
+//@Success 200 "the price trend of coin, {"rate": ..., "trend": ...}"
+//@Router /api/v1/price_info/{coin_ids} [get]
+func GetCoinPriceInfo(c *gin.Context) {
+	id := c.Param("coin_ids")
+
+	ids, _ := token.TokenIds(id)
+	c.JSON(200, coin.GetCoinTrend(ids))
 }

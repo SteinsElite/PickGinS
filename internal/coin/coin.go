@@ -149,6 +149,7 @@ func (c *CoinClient) GetLatestCoinInfo(ids string) (CoinInfo, error) {
 		Rate:  priceInfo[ids]["usd_24h_change"],
 		Trend: trend,
 	}
+	log.Println(coinInfo)
 	return coinInfo, nil
 }
 
@@ -183,4 +184,16 @@ func InitCoinClient() {
 // get the specific coin price in the cache
 func GetCurrentCoinPrice(coinIds string) float64 {
 	return coinClient.CoinCache[coinIds].Price
+}
+
+type TrendInfo struct {
+	Rate  float64   `json:"rate"`
+	Trend []float64 `json:"trend"`
+}
+
+func GetCoinTrend(coinIds string) TrendInfo {
+	return TrendInfo{
+		Rate:  coinClient.CoinCache[coinIds].Rate,
+		Trend: coinClient.CoinCache[coinIds].Trend,
+	}
 }

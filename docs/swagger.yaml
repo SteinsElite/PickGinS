@@ -13,7 +13,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: the profit point
+          description: the [(timetsamp,profit)] in the time range
       summary: get the phased profit info
   /api/v1/chart/ratio:
     get:
@@ -21,9 +21,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: amount of each asset in usd
       summary: get the ratio info
   /api/v1/chart/volume:
     get:
@@ -37,10 +35,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            type: string
+          description: the [(timestamp,volume)] in the time range
       summary: get the total volume info
+  /api/v1/price_info/{coin_ids}:
+    get:
+      parameters:
+      - description: '{BTC,ETH,USDT,HT,MDX}'
+        in: path
+        name: coin_ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'the price trend of coin, {"rate": ..., "trend": ...}'
   /api/v1/transaction/{address}:
     get:
       parameters:
@@ -49,12 +58,12 @@ paths:
         name: address
         required: true
         type: string
-      - description: 'tag of the transaction: {deposit,withdraw,claimProfit}, if not
-          specify, get all the category'
+      - description: tag of the transaction-{deposit,withdraw,claimProfit}, if not
+          specify, get all the category
         in: query
         name: tag
         type: string
-      - description: inde of page
+      - description: index of page
         in: query
         name: page
         required: true

@@ -2,59 +2,60 @@ package transaction
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
-	"github.com/SteinsElite/pickGinS/internal/storage"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/SteinsElite/pickGinS/internal/storage"
 )
 
 // The Api Function to interact with the transaction module
 
-func LoadTxFromDb(page, pageSize int64, tag string, address string) []TxRecord {
-	coll := storage.AccessCollections(transaction.txColl)
-	findOpt := options.Find()
-	findOpt.SetLimit(pageSize)
-	findOpt.SetSkip((page - 1) * pageSize)
-	findOpt.SetSort(bson.D{{"timestamp", 1}})
+func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord, error) {
+	coll := storage.AccessCollections(txColl)
+	opt := options.Find()
+	opt.SetLimit(pageSize)
+	opt.SetSkip((page - 1) * pageSize)
+	opt.SetSort(bson.D{{"timestamp", -1}})
 
 	var filter bson.D
 	if tag == "" {
 		filter = bson.D{{"user", address}}
 	} else {
-		filter = bson.D{{"user", address}, bson.E{Key: "txtype", Value: tag}}
+		filter = bson.D{{"user", address}, bson.E{Key: "tx_type", Value: tag}}
 	}
 	cur, err := coll.Find(
-		context.Background(),
+		context.TODO(),
 		filter,
-		findOpt,
+		opt,
 	)
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	}
-	defer cur.Close(context.Background())
-	result := []TxRecord{}
-	if err = cur.All(context.Background(), &result); err != nil {
-		fmt.Println(err)
+	defer cur.Close(context.TODO())
+	var result []TxRecord
+	if err = cur.All(context.TODO(), &result); err != nil {
+		log.Println(err)
+		return nil, err
 	}
-	return result
+	return result,nil
 }
 
-// This the watcher of the transaction record, it will poll the contract periodic to
-// get recent transaction info and persist it in the storage.
-// note: this func will blocking the main goroutine, so it should start in a standlone goroutine
+// PollTxInterval will poll the contract periodic to get recent transaction info and persist it
+//in the storage. this func will block, so it should start in a standalone goroutine
 func PollTxInterval() {
-	initr := InitRecordObserver()
-	timeTicker := time.NewTicker(transaction.interval * time.Second)
+	watcher := InitTxWatcher()
+	timeTicker := time.NewTicker(interval * time.Second)
 	for {
-		latestBlockNumber, err := initr.rpcClient().BlockNumber(context.TODO())
+		latestBlockNumber, err := watcher.RpcClient.Client.BlockNumber(context.TODO())
 		if err != nil {
 			log.Println("fail to get the block number", err)
 		} else {
-			tx := initr.ObtainTxUntil(int64(latestBlockNumber))
-			transaction.persistRecord(tx)
+			tx := watcher.ObtainTxUntil(int64(latestBlockNumber))
+			persistRecord(tx)
 		}
 		<-timeTicker.C
 	}

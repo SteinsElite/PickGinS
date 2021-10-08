@@ -14,7 +14,7 @@ func SetupGinServer() *gin.Engine {
 	r.GET("swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	apiv1 := r.Group("/api/v1")
 	apiv1.GET("/", func(c *gin.Context) {
-		c.JSON(200, "pick api")
+		c.JSON(200, "pick api v1")
 	})
 	
 	apiv1.GET("/price_info/:coin_ids", GetCoinPriceInfo)
@@ -22,8 +22,8 @@ func SetupGinServer() *gin.Engine {
 	apiv1.GET("/transaction/:address", GetTransaction)
 
 	//the api to get the global announcement
-	apiv1.GET("/announcement/", GetAnn)
-	apiv1.GET("/announcement/:category", GetSpecificAnn)
+	//apiv1.GET("/announcement/", GetAnn)
+	//apiv1.GET("/announcement/:category", GetSpecificAnn)
 
 	// api to get the info about vault
 	apiv1.GET("/chart/volume", GetVolume)

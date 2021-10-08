@@ -6,7 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-// token.go is some common def and util to deal with token on heco
+// token.go is some constant and tool to deal with token on heco
 
 // address of the Heco-peg assets(should never change)
 var (
@@ -33,10 +33,12 @@ const (
 	USDTIds     = "tether"
 	HTIds       = "huobi-token"
 	MDXIds      = "mdex"
-	Vs_currency = "usd"
+
+	VsCurrency = "usd"
 )
 
-// IdentifyToken convert token address ==> token symbol
+// IdentifyToken convert token address ==> token symbol, return error when the token is not
+// one of the supported address
 func IdentifyToken(token common.Address) (string, error) {
 	var tokenType string
 	switch token {
@@ -56,6 +58,7 @@ func IdentifyToken(token common.Address) (string, error) {
 	return tokenType, nil
 }
 
+// TokenIds get the token ids of the specific token, return error when token is not supported
 func TokenIds(coinSymbol string) (ids string, err error) {
 	switch coinSymbol {
 	case BTC:
@@ -69,7 +72,7 @@ func TokenIds(coinSymbol string) (ids string, err error) {
 	case MDX:
 		ids = MDXIds
 	default:
-		err = fmt.Errorf("unrecognized Token symbol")
+		err = fmt.Errorf("unknown token symbol")
 	}
 	return
 }
@@ -84,7 +87,7 @@ func TokenIds(coinSymbol string) (ids string, err error) {
 // 		addr = USDTAddr
 // 	case HT:
 // 		addr = HTAddr
-// 	case MDX:
+// 	case MDX:util
 // 		addr = MDXAddr
 // 	default:
 // 		err = fmt.Errorf("unrecognized Token")

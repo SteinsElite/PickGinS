@@ -42,7 +42,7 @@ func newRpcClient(rpcUrl string, contractAddr common.Address) *RpcClient {
 	}
 }
 
-// get a rpc client to interact with the pickrouter contract
+// GetRpcClient get a rpc client to interact with the pickrouter contract
 func GetRpcClient() *RpcClient {
 	return newRpcClient(hecoUrl, contractAddr)
 }

@@ -3,79 +3,47 @@ package vault
 import (
 	"context"
 	"fmt"
-	"github.com/SteinsElite/pickGinS/types"
 	"log"
-	"math"
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/SteinsElite/pickGinS/internal/coin"
 	"github.com/SteinsElite/pickGinS/internal/gateway"
 	"github.com/SteinsElite/pickGinS/internal/storage"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/robfig/cron/v3"
+	"github.com/SteinsElite/pickGinS/service/coin"
+	"github.com/SteinsElite/pickGinS/util"
 )
 
-// maintain the cache of the vault status,provide the interface for other module
+// vault.go maintain the cache of the vault status,provide the interface for other module
 // to query
-const (
-	decimal = 18
-)
+
 const (
 	Week  = "7D"
 	Month = "1M"
 	Year  = "1Y"
 )
 
+// vault watcher will store the latest vault status since last update which
+// will be queried by other parts
+var vaultWatcher *VaultWatcher
+
 type ValuePair struct {
 	TimeStamp int64
 	Value     float64
 }
 
-var vaultWatcher *VaultWatcher
-
 // VaultStats the vault status on the contract
 type VaultStats struct {
 	TimeStamp  int64
 	CoinAmount map[string]float64
-	Profit     float64
+	Profit     float64 // total profit util now
 }
 
-// RunVaultWatcher use cron to poll the vault info at everyday UTC midnight 00:00:00 and every 30
-//min to maintain the vault status
-func RunVaultWatcher() {
-
-	initVaultWatcher()
-	c := cron.New()
-
-	_, err := c.AddFunc("CRON_TZ=UTC @daily", func() {
-		timestamp := time.Now().Unix()
-		vaultStats := vaultWatcher.VaultStatsFromChain()
-		vaultStats.TimeStamp = timestamp
-		coll := storage.AccessCollections("vault")
-		_, err := coll.InsertOne(context.TODO(), vaultStats)
-		if err != nil {
-			fmt.Println(err)
-		}
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	_, err = c.AddFunc("CRON_TZ=UTC @every 30m", func() {
-		stats := vaultWatcher.VaultStatsFromChain()
-		stats.TimeStamp = time.Now().Unix()
-		vaultWatcher.stats = stats
-	})
-	if err != nil {
-		fmt.Println(err)
-	}
-	c.Start()
-}
-
+// set up the vault watcher to provide service for querying
 func initVaultWatcher() {
 	vaultWatcher = &VaultWatcher{
 		RpcClient: *gateway.GetRpcClient(),
@@ -89,128 +57,62 @@ type VaultWatcher struct {
 	stats VaultStats
 }
 
-// get the float64 represention of the amount,if necessary, use big.float instead
-// (TODO ERIJ)
+// get the float64 representation of the amount,if necessary, use big.float instead
 func (vw *VaultWatcher) tokenAmount(token common.Address) (fAmount float64) {
 	tokenState, _ := vw.Instance.TokenState(nil, token)
 	tokenVolume := new(big.Int).Sub(tokenState.Max, tokenState.Remain)
-	fTokenVolume, _ := new(big.Float).SetString(tokenVolume.String())
-	bfAmount := new(big.Float).Quo(fTokenVolume, big.NewFloat(math.Pow10(decimal)))
-	fAmount, _ = bfAmount.Float64()
+	fAmount = util.Amount2Float(tokenVolume)
 	return
 }
 
-func (vw *VaultWatcher) profitAmount() float64 {
-	profit, err := vw.Instance.ViewAccumulatedProfit(nil)
-	if err != nil {
-
-	}
-	fProfit, _ := new(big.Float).SetString(profit.String())
-	res, _ := new(big.Float).Quo(fProfit, big.NewFloat(math.Pow10(decimal))).Float64()
-	return res
+func (vw *VaultWatcher) profitAmount() (fProfit float64) {
+	profit, _ := vw.Instance.ViewAccumulatedProfit(nil)
+	fProfit = util.Amount2Float(profit)
+	return
 }
 
-// get the latest vault status from blockchain
+// VaultStatsFromChain get the latest vault status from blockchain,
 func (vw *VaultWatcher) VaultStatsFromChain() (stats VaultStats) {
 	stats.Profit = vw.profitAmount()
 	stats.CoinAmount = make(map[string]float64)
-	stats.CoinAmount[_type.BTC] = vw.tokenAmount(_type.BTCAddr)
-	stats.CoinAmount[_type.ETH] = vw.tokenAmount(_type.ETHAddr)
-	stats.CoinAmount[_type.USDT] = vw.tokenAmount(_type.USDTAddr)
-	stats.CoinAmount[_type.HT] = vw.tokenAmount(_type.HTAddr)
-	stats.CoinAmount[_type.MDX] = vw.tokenAmount(_type.MDXAddr)
+	stats.CoinAmount[util.BTC] = vw.tokenAmount(util.BTCAddr)
+	stats.CoinAmount[util.ETH] = vw.tokenAmount(util.ETHAddr)
+	stats.CoinAmount[util.USDT] = vw.tokenAmount(util.USDTAddr)
+	stats.CoinAmount[util.HT] = vw.tokenAmount(util.HTAddr)
+	stats.CoinAmount[util.MDX] = vw.tokenAmount(util.MDXAddr)
 	return
 }
 
-// the api to be called by other
-func queryStartTimeForVolume(phase string) (t time.Time, err error) {
-	currentTime := time.Now()
-	midnight := midnightOfDay(currentTime)
-	switch phase {
-	case Week:
-		t = midnight.AddDate(0, 0, -7)
-	case Month:
-		t = midnight.AddDate(0, -1, 0)
-	case Year:
-		t = midnight.AddDate(-1, 0, 0)
-	default:
-		err = fmt.Errorf("get the wrong time range")
-	}
-	return
-}
-
-func getQualifiedStatsFromDb(phase string) []VaultStats {
-	startTime, err := queryStartTimeForVolume(phase)
-	if err != nil {
-		log.Println("fail get the start time due to: ", err)
-	}
+// get the qualified status start since the start time
+func getQualifiedStatsFromDb(startTime int64) []VaultStats {
 	coll := storage.AccessCollections("vault")
-	findOpt := options.Find()
-	findOpt.SetSort(bson.D{{"timestamp", 1}})
+	opt := options.Find()
+	opt.SetSort(bson.D{{"timestamp", 1}})
 	cur, err := coll.Find(
-		context.Background(),
-		bson.D{{"timestamp", bson.D{{"$gte", startTime.Unix()}}}},
-		findOpt,
+		context.TODO(),
+		bson.D{{"timestamp", bson.D{{"$gte", startTime}}}},
+		opt,
 	)
 	if err != nil {
 		log.Println(err)
 	}
-	result := []VaultStats{}
+	var result []VaultStats
 	cur.All(context.TODO(), &result)
 	defer cur.Close(context.TODO())
 	return result
 }
 
-func volumeValue(stats VaultStats) float64 {
-	var totalValue float64
-	for k, amount := range stats.CoinAmount {
-		ids, _ := _type.TokenIds(k)
-		totalValue += amount * coin.GetCurrentCoinPrice(ids)
-	}
-	return totalValue
-}
-
-// return the instant time we shoule lookup in the database
-func qulifiedTick(phase string) (tick []int64, err error) {
-	current := time.Now()
-	midnight := midnightOfDay(current)
-
-	timetick := []int64{}
-	switch phase {
-	case Week:
-		for i := 0; i < 7; i++ {
-			tick := midnight.AddDate(0, 0, -1*i-1)
-			timetick = append(timetick, tick.Unix())
-		}
-	case Month:
-		for i := 0; i < 30; i++ {
-			tick := midnight.AddDate(0, 0, -1*i-1)
-			timetick = append(timetick, tick.Unix())
-		}
-	case Year:
-		currentMonth := startOfMonth(current)
-		for i := 0; i < 12; i++ {
-			tick := currentMonth.AddDate(0, -1*i-1, 0)
-			timetick = append(timetick, tick.Unix())
-		}
-	default:
-		err = fmt.Errorf("get the wrong time range")
-	}
-	return
-}
-
-func getQulifiedProfitFromDb(phase string) []ValuePair {
+func getQualifiedProfitFromDb(ticks []int64) []ValuePair {
 	coll := storage.AccessCollections("vault")
-	ticks, _ := qulifiedTick(phase)
-	profits := []ValuePair{}
+	var profits []ValuePair
 	for _, v := range ticks {
-		findOpt := options.Find()
-		findOpt.SetSort(bson.D{{"timestamp", 1}})
-		findOpt.SetLimit(1)
+		opt := options.Find()
+		opt.SetSort(bson.D{{"timestamp", 1}})
+		opt.SetLimit(1)
 		cur, err := coll.Find(
-			context.Background(),
+			context.TODO(),
 			bson.D{{"timestamp", bson.D{{"$gte", v}}}},
-			findOpt,
+			opt,
 		)
 		if err != nil {
 			log.Println(err)
@@ -226,33 +128,64 @@ func getQulifiedProfitFromDb(phase string) []ValuePair {
 				Value:     stats.Profit,
 			})
 		} else {
+			// if we can't get the stats at the timestamp: we don't start the vault watcher since
+			// that time, so just set it to 0
 			profits = append(profits, ValuePair{
 				TimeStamp: v,
-				Value:     float64(0),
+				Value:     0.0,
 			})
 		}
 	}
 	return profits
 }
+
+// calculate the total volume value in USD of the specific stats
+func volumeValue(stats VaultStats) float64 {
+	var totalValue float64
+	for k, amount := range stats.CoinAmount {
+		totalValue += amount * coin.GetCurrentCoinPrice(k)
+	}
+	return totalValue
+}
+
+// calculate the profit value in USD
 func profitValue(amount float64) float64 {
-	return amount * coin.GetCurrentCoinPrice(_type.MDXIds)
+	return amount * coin.GetCurrentCoinPrice(util.MDX)
 }
 
-func midnightOfDay(t time.Time) time.Time {
-	return time.Date(
-		t.Year(),
-		t.Month(),
-		t.Day(),
-		0, 0, 0, 0,
-		time.UTC,
-	)
+// RunVaultWatcher use cron to poll the vault info at everyday UTC midnight 00:00:00 and every 30
+//min to maintain the vault status
+func RunVaultWatcher() {
+	initVaultWatcher()
+	c := cron.New()
+
+	_, err := c.AddFunc("CRON_TZ=UTC @daily", func() {
+		timestamp := time.Now().Unix()
+		vaultStats := vaultWatcher.VaultStatsFromChain()
+		vaultStats.TimeStamp = timestamp
+		coll := storage.AccessCollections("vault")
+		_, err := coll.InsertOne(context.TODO(), vaultStats)
+		if err != nil {
+			fmt.Println(err)
+		}
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = c.AddFunc("CRON_TZ=UTC @every 30m", func() {
+		stats := vaultWatcher.VaultStatsFromChain()
+		stats.TimeStamp = time.Now().Unix()
+		vaultWatcher.stats = stats
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.Start()
 }
 
-func startOfMonth(t time.Time) time.Time {
-	return time.Date(
-		t.Year(),
-		t.Month(),
-		0, 0, 0, 0, 0,
-		time.UTC,
-	)
+// StartVaultWatcher start run the vault watcher, now just start the vault watcher in a subroutine,
+// (TODO(ERIJ)) try to deal with the error in the StartVaultWacther
+func StartVaultWatcher() {
+	go RunVaultWatcher()
 }

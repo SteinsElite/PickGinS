@@ -17,7 +17,7 @@ func SetupGinServer() *gin.Engine {
 		c.JSON(200, "pick api v1")
 	})
 	
-	apiv1.GET("/price_info/:coin_ids", GetCoinPriceInfo)
+	apiv1.GET("/price_info/:coin", GetCoinPriceInfo)
 	// the api to get the transaction record
 	apiv1.GET("/transaction/:address", GetTransaction)
 

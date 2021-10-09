@@ -147,7 +147,7 @@ func GetRatio(c *gin.Context) {
 // GetCoinPriceInfo godoc
 //@Summary get the Coin Price info and trend
 //@Produce json
-//@Param coin_ids path string true "{BTC,ETH,USDT,HT,MDX}"
+//@Param coin path string true "{BTC,ETH,USDT,HT,MDX}"
 //@Success 200 "the price trend of coin, {"rate": ..., "trend": ...}"
 //@Router /api/v1/price_info/{coin} [get]
 func GetCoinPriceInfo(c *gin.Context) {
@@ -157,6 +157,7 @@ func GetCoinPriceInfo(c *gin.Context) {
 			"error": "invalid coin symbol",
 			"message": "should be one of {BTC,ETH,USDT,HT,MDX}",
 		})
+		return
 	}
 	c.JSON(200, coin.GetCoinTrend(coinSymbol))
 }

@@ -40,7 +40,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "the [(timetsamp,profit)] in the time range"
+                        "description": "the [(timestamp,profit)] in the time range"
                     }
                 }
             }
@@ -80,16 +80,17 @@ var doc = `{
                 }
             }
         },
-        "/api/v1/price_info/{coin_ids}": {
+        "/api/v1/price_info/{coin}": {
             "get": {
                 "produces": [
                     "application/json"
                 ],
+                "summary": "get the Coin Price info and trend",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "{BTC,ETH,USDT,HT,MDX}",
-                        "name": "coin_ids",
+                        "name": "coin",
                         "in": "path",
                         "required": true
                     }
@@ -139,6 +140,12 @@ var doc = `{
                 "responses": {
                     "200": {
                         "description": "the transaction of the page"
+                    },
+                    "400": {
+                        "description": "Invalid params"
+                    },
+                    "500": {
+                        "description": "Server error"
                     }
                 }
             }

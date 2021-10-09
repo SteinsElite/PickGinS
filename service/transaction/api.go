@@ -15,6 +15,7 @@ import (
 
 func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord, error) {
 	coll := storage.AccessCollections(txColl)
+
 	opt := options.Find()
 	opt.SetLimit(pageSize)
 	opt.SetSkip((page - 1) * pageSize)
@@ -41,7 +42,7 @@ func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord,
 		log.Println(err)
 		return nil, err
 	}
-	return result,nil
+	return result, nil
 }
 
 // PollTxInterval will poll the contract periodic to get recent transaction info and persist it

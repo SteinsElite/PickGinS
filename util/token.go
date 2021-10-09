@@ -28,11 +28,11 @@ const (
 
 // ids to query info from 3rd-party price-info api
 const (
-	BTCIds      = "bitcoin"
-	ETHIds      = "ethereum"
-	USDTIds     = "tether"
-	HTIds       = "huobi-token"
-	MDXIds      = "mdex"
+	BTCIds  = "bitcoin"
+	ETHIds  = "ethereum"
+	USDTIds = "tether"
+	HTIds   = "huobi-token"
+	MDXIds  = "mdex"
 
 	VsCurrency = "usd"
 )

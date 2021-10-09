@@ -173,7 +173,7 @@ func RunCoinInfoWatcher() {
 	}
 }
 
-func StartCoinInfoWatcher(){
+func StartCoinInfoWatcher() {
 	go RunCoinInfoWatcher()
 }
 

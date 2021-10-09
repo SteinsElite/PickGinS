@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/SteinsElite/pickGinS/service/notification"
 	"github.com/SteinsElite/pickGinS/util"
 	"strconv"
 
@@ -34,6 +35,16 @@ func validCoinSymbol(coin string) bool {
 		coin == util.ETH ||
 		coin == util.USDT ||
 		coin == util.HT {
+		return true
+	}
+	return false
+}
+
+func validNotificationTag(tag string) bool {
+	if tag == "" ||
+		tag == notification.QuotaUpdate||
+		tag == notification.Activity ||
+		tag == notification.Weekly {
 		return true
 	}
 	return false
@@ -84,13 +95,7 @@ func GetTransaction(c *gin.Context) {
 
 }
 
-//func GetAnn(c *gin.Context) {
-//
-//}
 
-//func GetSpecificAnn(c *gin.Context) {
-//
-//}
 
 // GetVolume godoc
 // @Summary get the total volume info
@@ -147,16 +152,87 @@ func GetRatio(c *gin.Context) {
 // GetCoinPriceInfo godoc
 //@Summary get the Coin Price info and trend
 //@Produce json
-//@Param coin_ids path string true "{BTC,ETH,USDT,HT,MDX}"
+//@Param coin path string true "{BTC,ETH,USDT,HT,MDX}"
 //@Success 200 "the price trend of coin, {"rate": ..., "trend": ...}"
 //@Router /api/v1/price_info/{coin} [get]
 func GetCoinPriceInfo(c *gin.Context) {
 	coinSymbol := c.Param("coin")
-	if !validCoinSymbol(coinSymbol){
+	if !validCoinSymbol(coinSymbol) {
 		c.JSON(400, gin.H{
-			"error": "invalid coin symbol",
+			"error":   "invalid coin symbol",
 			"message": "should be one of {BTC,ETH,USDT,HT,MDX}",
 		})
 	}
 	c.JSON(200, coin.GetCoinTrend(coinSymbol))
+}
+
+// GetNotification godoc
+// @summary get notification info
+// @description obtains the specific notification by the tag
+// @produce json
+// @param tag query string false "tag of the notification-{QuotaUpdate,Activity,Weekly}, if not specify, get all the category"
+// @param page query int true "index of page"
+// @param page_size query int true "size of each page"
+// @success 200 {array} notification.Notification
+// @failure 400 {json}
+// router /api/v1/notification [get]
+func GetNotification(c *gin.Context){
+	tag := c.Query("tag")
+	if !validNotificationTag(tag) {
+		c.JSON(400, gin.H{
+			"err": "Invalid params",
+			"msg": "tags should be one of {QuotaUpdate,Activity,Weekly}",
+		})
+		return
+	}
+
+	if c.Query("page") == "" || c.Query("page_size") == "" {
+		c.JSON(400, gin.H{
+			"err": "Missing params",
+			"msg": "specify the page & page_size",
+		})
+		return
+	}
+	page, _ := strconv.ParseInt(c.Query("page"), 10, 64)
+	pageSize, _ := strconv.ParseInt(c.Query("page_size"), 10, 64)
+
+	res := notification.GetNotification(tag,page, pageSize)
+	c.JSON(200, res)
+}
+
+func GetWordHash(c *gin.Context) {
+	addr := c.Query("address")
+	if !util.IsValidAddress(addr){
+		c.JSON(400, gin.H{
+			"error": "Invalid params",
+			"message": "address is not valid ethereum address",
+		})
+		return
+	}
+	word := getAuthWord(addr)
+	if word == nil {
+		c.JSON(3001, gin.H{
+			"error": "Fail to getAuthWord",
+			"message": "the address is not register as admin",
+		})
+		return
+	}
+	c.JSON(200, word)
+}
+
+func RegisterPublisher(c *gin.Context){
+	adminAddr := c.Param("address")
+	sig := c.Query("sig")
+	addr := c.Query("addr")
+
+	_ = addr
+	if !IsAuth(adminAddr, sig){
+		c.JSON(3001, gin.H{
+			"error":   "not permission",
+			"message": "current address is not able to register new publisher",
+		})
+	}
+
+
+
 }

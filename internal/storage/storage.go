@@ -1,13 +1,13 @@
 package storage
 
 import (
-"context"
-"fmt"
-"log"
-"time"
+	"context"
+	"fmt"
+	"log"
+	"time"
 
-"go.mongodb.org/mongo-driver/mongo"
-"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // package storage provide access to the database, there is a package global
@@ -15,10 +15,10 @@ import (
 // InitDB() first
 
 const (
-	timeout      = 10
-	mongouri     = "mongodb://localhost:27017"
-	dbname       = "pick"
-	maxpoolsize  = 100
+	timeout     = 10
+	mongouri    = "mongodb://localhost:27017"
+	dbname      = "pick"
+	maxpoolsize = 100
 )
 
 var mgo *mongo.Database
@@ -49,4 +49,3 @@ func AccessCollections(coll string) *mongo.Collection {
 	}
 	return mgo.Collection(coll)
 }
-

@@ -162,6 +162,7 @@ func GetCoinPriceInfo(c *gin.Context) {
 			"error":   "invalid coin symbol",
 			"message": "should be one of {BTC,ETH,USDT,HT,MDX}",
 		})
+		return
 	}
 	c.JSON(200, coin.GetCoinTrend(coinSymbol))
 }

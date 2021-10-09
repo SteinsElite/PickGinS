@@ -8,11 +8,12 @@ import (
 )
 
 func main() {
-	go transaction.PollTxInterval()
-	go coin.RunCoinInfoWatcher()
-	// start the vault watcher
+	// start some service
+	transaction.StartTxWatcher()
+	coin.StartCoinInfoWatcher()
 	vault.StartVaultWatcher()
 
+	// start the api server
 	r := router.SetupGinServer()
 	r.Run(":8080")
 }

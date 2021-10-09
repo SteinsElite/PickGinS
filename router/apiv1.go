@@ -158,5 +158,5 @@ func GetCoinPriceInfo(c *gin.Context) {
 			"message": "should be one of {BTC,ETH,USDT,HT,MDX}",
 		})
 	}
-	c.JSON(200, coin.GetCoinTrend(ids))
+	c.JSON(200, coin.GetCoinTrend(coinSymbol))
 }

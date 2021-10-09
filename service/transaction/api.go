@@ -60,3 +60,7 @@ func PollTxInterval() {
 		<-timeTicker.C
 	}
 }
+
+func StartTxWatcher() {
+	go PollTxInterval()
+}

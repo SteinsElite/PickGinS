@@ -173,6 +173,10 @@ func RunCoinInfoWatcher() {
 	}
 }
 
+func StartCoinInfoWatcher(){
+	go RunCoinInfoWatcher()
+}
+
 var coinClient *CoinClient
 
 func InitCoinClient() {

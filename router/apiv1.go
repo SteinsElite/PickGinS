@@ -28,6 +28,17 @@ func validTxTag(tag string) bool {
 	return false
 }
 
+func validCoinSymbol(coin string) bool {
+	if coin == util.MDX ||
+		coin == util.BTC ||
+		coin == util.ETH ||
+		coin == util.USDT ||
+		coin == util.HT {
+		return true
+	}
+	return false
+}
+
 // GetTransaction godoc
 // @Summary get the transaction info
 // @Produce  json
@@ -59,7 +70,7 @@ func GetTransaction(c *gin.Context) {
 	page, _ := strconv.ParseInt(c.Query("page"), 10, 64)
 	pageSize, _ := strconv.ParseInt(c.Query("page_size"), 10, 64)
 
-	res, err:= transaction.LoadTxFromDb(page, pageSize, tag, userAddr)
+	res, err := transaction.LoadTxFromDb(page, pageSize, tag, userAddr)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"err": "internal error in server",
@@ -140,7 +151,12 @@ func GetRatio(c *gin.Context) {
 //@Success 200 "the price trend of coin, {"rate": ..., "trend": ...}"
 //@Router /api/v1/price_info/{coin} [get]
 func GetCoinPriceInfo(c *gin.Context) {
-	id := c.Param("coin")
-	ids, _ := util.TokenIds(id)
+	coinSymbol := c.Param("coin")
+	if !validCoinSymbol(coinSymbol){
+		c.JSON(400, gin.H{
+			"error": "invalid coin symbol",
+			"message": "should be one of {BTC,ETH,USDT,HT,MDX}",
+		})
+	}
 	c.JSON(200, coin.GetCoinTrend(ids))
 }

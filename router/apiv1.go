@@ -174,7 +174,6 @@ func GetCoinPriceInfo(c *gin.Context) {
 // @param page query int true "index of page"
 // @param page_size query int true "size of each page"
 // @success 200 {array} notification.Notification
-// @failure 400 {json}
 // router /api/v1/notification [get]
 func GetNotification(c *gin.Context) {
 	tag := c.Query("tag")
@@ -262,8 +261,7 @@ func AddPublisher(c *gin.Context) {
 // @param signature formData string true "the signature of the publisher"
 // @param title formData string true "the title of the notification"
 // @param content formData string true "the content of the notification"
-// @param category formData string true "the category of the notification: {QuotaUpdate, Weekly,
-// Activity}"
+// @param category formData string true "the category of the notification: { QuotaUpdate, Weekly, Activity}"
 // @success 200
 // router /api/v1/notification/{publisher} [post]
 func PublishNotification(c *gin.Context) {
@@ -280,14 +278,14 @@ func PublishNotification(c *gin.Context) {
 	content := c.PostForm("content")
 	category := c.PostForm("category")
 	announcement := notification.Notification{
-		Title: title,
-		Category: category,
-		Content: content,
+		Title:     title,
+		Category:  category,
+		Content:   content,
 		TimeStamp: time.Now().Unix(),
 	}
-	if err := notification.PublishNotification(announcement); err != nil{
+	if err := notification.PublishNotification(announcement); err != nil {
 		c.JSON(500, gin.H{
-			"error": "fail to publish notification",
+			"error":   "fail to publish notification",
 			"message": err,
 		})
 		return

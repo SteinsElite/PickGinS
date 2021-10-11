@@ -1,3 +1,15 @@
+definitions:
+  notification.Notification:
+    properties:
+      category:
+        type: string
+      content:
+        type: string
+      timeStamp:
+        type: integer
+      title:
+        type: string
+    type: object
 info:
   contact: {}
 paths:

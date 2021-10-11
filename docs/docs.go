@@ -150,6 +150,25 @@ var doc = `{
                 }
             }
         }
+    },
+    "definitions": {
+        "notification.Notification": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "timeStamp": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        }
     }
 }`
 

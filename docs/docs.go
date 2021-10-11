@@ -23,6 +23,79 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/auth/keyword_hash": {
+            "get": {
+                "description": "the keyword hash is sign by the account to make sure that the account is accessed",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get the keywordHash to sign",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the address of the keyword bind to",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/{address}/add_publisher": {
+            "post": {
+                "description": "add new publisher who is ability to publish new notification(",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "add new publisher",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the publisher address is login now",
+                        "name": "address",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "signature of the publisher address",
+                        "name": "signature",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the address of new publisher to add",
+                        "name": "new_publisher",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the keyword been used to sign",
+                        "name": "keyword",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/v1/chart/profit": {
             "get": {
                 "produces": [
@@ -76,6 +149,99 @@ var doc = `{
                 "responses": {
                     "200": {
                         "description": "the [(timestamp,volume)] in the time range"
+                    }
+                }
+            }
+        },
+        "/api/v1/notification": {
+            "get": {
+                "description": "obtains the specific notification by the tag",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "get notification info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "tag of the notification-{QuotaUpdate,Activity,Weekly}, if not specify, get all the category",
+                        "name": "tag",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "index of page",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "size of each page",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/notification.Notification"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/notification/{publisher}": {
+            "post": {
+                "description": "publish new notification with title, content, category",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "publish new notification",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "the publisher address",
+                        "name": "publisher",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the signature of the publisher",
+                        "name": "signature",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the title of the notification",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the content of the notification",
+                        "name": "content",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "the category of the notification: { QuotaUpdate, Weekly, Activity}",
+                        "name": "category",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
                     }
                 }
             }
@@ -183,12 +349,12 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "",
+	Version:     "1.0",
 	Host:        "",
-	BasePath:    "",
+	BasePath:    "/api/v1",
 	Schemes:     []string{},
-	Title:       "",
-	Description: "",
+	Title:       "pick finance api",
+	Description: "API to get data from blockchain",
 }
 
 type s struct{}

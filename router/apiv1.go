@@ -174,7 +174,7 @@ func GetCoinPriceInfo(c *gin.Context) {
 // @param page query int true "index of page"
 // @param page_size query int true "size of each page"
 // @success 200 {array} notification.Notification
-// router /api/v1/notification [get]
+// @router /api/v1/notification [get]
 func GetNotification(c *gin.Context) {
 	tag := c.Query("tag")
 	if !validNotificationTag(tag) {
@@ -205,7 +205,7 @@ func GetNotification(c *gin.Context) {
 // @produce json
 // @param address query string true "the address of the keyword bind to"
 // @success 200 {array} byte
-// router /api/v1/auth/keyword_hash [get]
+// @router /api/v1/auth/keyword_hash [get]
 func GetKeyWordHash(c *gin.Context) {
 	accountAddr := c.Query("address")
 	if !util.IsValidAddress(accountAddr) {
@@ -236,7 +236,7 @@ func GetKeyWordHash(c *gin.Context) {
 // @param new_publisher formData string true "the address of new publisher to add"
 // @param keyword formData string true "the keyword been used to sign"
 // @success 200
-// router /api/v1/auth/{address}/add_publisher [post]
+// @router /api/v1/auth/{address}/add_publisher [post]
 func AddPublisher(c *gin.Context) {
 	adminAddr := c.Param("address")
 	sig := c.PostForm("signature")
@@ -263,7 +263,7 @@ func AddPublisher(c *gin.Context) {
 // @param content formData string true "the content of the notification"
 // @param category formData string true "the category of the notification: { QuotaUpdate, Weekly, Activity}"
 // @success 200
-// router /api/v1/notification/{publisher} [post]
+// @router /api/v1/notification/{publisher} [post]
 func PublishNotification(c *gin.Context) {
 	publisher := c.Param("publisher")
 	signature := c.PostForm("signature")

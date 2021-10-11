@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   notification.Notification:
     properties:
@@ -12,7 +13,60 @@ definitions:
     type: object
 info:
   contact: {}
+  description: API to get data from blockchain
+  title: pick finance api
+  version: "1.0"
 paths:
+  /api/v1/auth/{address}/add_publisher:
+    post:
+      description: add new publisher who is ability to publish new notification(
+      parameters:
+      - description: the publisher address is login now
+        in: path
+        name: address
+        required: true
+        type: string
+      - description: signature of the publisher address
+        in: formData
+        name: signature
+        required: true
+        type: string
+      - description: the address of new publisher to add
+        in: formData
+        name: new_publisher
+        required: true
+        type: string
+      - description: the keyword been used to sign
+        in: formData
+        name: keyword
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: add new publisher
+  /api/v1/auth/keyword_hash:
+    get:
+      description: the keyword hash is sign by the account to make sure that the account
+        is accessed
+      parameters:
+      - description: the address of the keyword bind to
+        in: query
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+      summary: get the keywordHash to sign
   /api/v1/chart/profit:
     get:
       parameters:
@@ -49,6 +103,70 @@ paths:
         "200":
           description: the [(timestamp,volume)] in the time range
       summary: get the total volume info
+  /api/v1/notification:
+    get:
+      description: obtains the specific notification by the tag
+      parameters:
+      - description: tag of the notification-{QuotaUpdate,Activity,Weekly}, if not
+          specify, get all the category
+        in: query
+        name: tag
+        type: string
+      - description: index of page
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: size of each page
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/notification.Notification'
+            type: array
+      summary: get notification info
+  /api/v1/notification/{publisher}:
+    post:
+      description: publish new notification with title, content, category
+      parameters:
+      - description: the publisher address
+        in: path
+        name: publisher
+        required: true
+        type: string
+      - description: the signature of the publisher
+        in: formData
+        name: signature
+        required: true
+        type: string
+      - description: the title of the notification
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: the content of the notification
+        in: formData
+        name: content
+        required: true
+        type: string
+      - description: 'the category of the notification: { QuotaUpdate, Weekly, Activity}'
+        in: formData
+        name: category
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+      summary: publish new notification
   /api/v1/price_info/{coin}:
     get:
       parameters:

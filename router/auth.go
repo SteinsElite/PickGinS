@@ -75,6 +75,12 @@ func getAuthWord(address string) []byte {
 }
 
 func SetNewPublisher(address string, word string){
-	addr := common.HexToAddress(address)
-	wordhash := crypto.Keccak256Hash([]byte(word)).Bytes()
+	coll := storage.AccessCollections("auth")
+	_, err := coll.InsertOne(context.TODO(), AuthAccount{
+		Address:  common.HexToAddress(address),
+		WordHash: crypto.Keccak256Hash([]byte(word)).Bytes(),
+	})
+	if err != nil {
+		log.Println("Fail writing to the database: ", err)
+	}
 }

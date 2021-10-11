@@ -46,7 +46,7 @@ func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord,
 }
 
 // PollTxInterval will poll the contract periodic to get recent transaction info and persist it
-//in the storage. this func will block, so it should start in a standalone goroutine
+// in the storage. this func will block, so it should start in a standalone goroutine
 func PollTxInterval() {
 	watcher := InitTxWatcher()
 	timeTicker := time.NewTicker(interval * time.Second)

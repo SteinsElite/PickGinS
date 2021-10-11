@@ -2,10 +2,12 @@ package notification
 
 import (
 	"context"
-	"github.com/SteinsElite/pickGinS/internal/storage"
+	"log"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"log"
+
+	"github.com/SteinsElite/pickGinS/internal/storage"
 )
 
 const (
@@ -22,15 +24,17 @@ type Notification struct {
 	Title     string
 	Content   string
 	Category  string
-	TimeStamp uint64
+	TimeStamp int64
 }
 
-func PublishNotification(notification Notification) {
+func PublishNotification(notification Notification) error {
 	coll := storage.AccessCollections(Coll)
 	_, err := coll.InsertOne(context.TODO(), notification)
 	if err != nil {
 		log.Println("Fail to write to database due to: ", err)
+		return err
 	}
+	return nil
 }
 
 // GetNotification if noti is null string "", it mean that we should get all the notification
@@ -56,7 +60,7 @@ func GetNotification(notification string, page int64, pageSize int64) []Notifica
 	if err != nil {
 		log.Println(err)
 	}
-
+	
 	var notifications []Notification
 	cur.All(context.TODO(), &notifications)
 	defer cur.Close(context.TODO())

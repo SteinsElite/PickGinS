@@ -154,7 +154,7 @@ func profitValue(amount float64) float64 {
 }
 
 // RunVaultWatcher use cron to poll the vault info at everyday UTC midnight 00:00:00 and every 30
-//min to maintain the vault status
+// min to maintain the vault status
 func RunVaultWatcher() {
 	initVaultWatcher()
 	c := cron.New()

@@ -43,7 +43,7 @@ func AccessCollections(coll string) *mongo.Collection {
 	if mgo == nil {
 		// if mgo is not initialized, we has 2 choice: panic or init it,
 		// now we choose init it, so when first access the db collection,
-		//we init the db
+		// we init the db
 		InitDB(dbname)
 		log.Println("init the db: ", coll)
 	}

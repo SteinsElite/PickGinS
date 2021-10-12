@@ -81,20 +81,20 @@ func queryTimeTickForProfit(phase string) (timetick []int64, err error) {
 	switch phase {
 	case Week:
 		// get 7 timetick
-		for i := 0; i < 7; i++ {
-			tick := midnight.AddDate(0, 0, -1*i-1)
+		for i := 7; i > 0; i-- {
+			tick := midnight.AddDate(0, 0, -1*i)
 			timetick = append(timetick, tick.Unix())
 		}
 	case Month:
 		// we suspend get the latest 30 data
-		for i := 0; i < 30; i++ {
-			tick := midnight.AddDate(0, 0, -1*i-1)
+			for i := 30; i > 0; i-- {
+			tick := midnight.AddDate(0, 0, -1*i)
 			timetick = append(timetick, tick.Unix())
 		}
 	case Year:
 		currentMonth := startOfMonth()
-		for i := 0; i < 12; i++ {
-			tick := currentMonth.AddDate(0, -1*i-1, 0)
+		for i := 12; i > 0; i-- {
+			tick := currentMonth.AddDate(0, -1*i, 0)
 			timetick = append(timetick, tick.Unix())
 		}
 	default:

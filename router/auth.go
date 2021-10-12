@@ -17,6 +17,7 @@ import (
 const (
 	RootAddr = "0x397a9e1719113Cd68ba79d59e1e1988C669cA7F3"
 	RootWord = "PICK"
+	coll = "admin"
 )
 
 type AuthAccount struct {
@@ -40,7 +41,7 @@ func IsAuth(addr string, sig string) bool {
 
 // InitAuth store the first root account in the db to publish the notification
 func InitAuth() {
-	coll := storage.AccessCollections("auth")
+	coll := storage.AccessCollections(coll)
 	count, _ := coll.CountDocuments(
 		context.TODO(),
 		bson.D{},
@@ -59,11 +60,11 @@ func InitAuth() {
 
 func getAuthWord(address string) []byte {
 	addr := common.HexToAddress(address)
-	coll := storage.AccessCollections("auth")
+	coll := storage.AccessCollections(coll)
 
 	cur, err := coll.Find(
 		context.TODO(),
-		bson.D{{"Address", addr}},
+		bson.D{{"address", addr}},
 	)
 	if err != nil {
 		log.Println(err)
@@ -82,7 +83,7 @@ func getAuthWord(address string) []byte {
 }
 
 func SetNewPublisher(address string, word string) {
-	coll := storage.AccessCollections("auth")
+	coll := storage.AccessCollections(coll)
 	_, err := coll.InsertOne(context.TODO(), AuthAccount{
 		Address:  common.HexToAddress(address),
 		WordHash: crypto.Keccak256Hash([]byte(word)).Bytes(),

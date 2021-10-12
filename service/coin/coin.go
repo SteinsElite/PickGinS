@@ -149,7 +149,6 @@ func (c *CoinClient) GetLatestCoinInfo(ids string) (CoinInfo, error) {
 		Rate:  priceInfo[ids]["usd_24h_change"],
 		Trend: trend,
 	}
-	log.Println(coinInfo)
 	return coinInfo, nil
 }
 

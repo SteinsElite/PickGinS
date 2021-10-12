@@ -11,8 +11,7 @@ import (
 )
 
 // package storage provide access to the database, there is a package global
-// point mgo represent the connecter,so before use the mgo, call the
-// InitDB() first
+// point mgo represent the connector
 
 const (
 	timeout     = 10
@@ -41,11 +40,9 @@ func connectToDB(uri, dbname string, num uint64) {
 
 func AccessCollections(coll string) *mongo.Collection {
 	if mgo == nil {
-		// if mgo is not initialized, we has 2 choice: panic or init it,
-		// now we choose init it, so when first access the db collection,
-		// we init the db
+		// if mgo isn't initialized yet when we first access the collection, initialize it
 		InitDB(dbname)
-		log.Println("init the db: ", coll)
+		log.Println("init the db: ", dbname)
 	}
 	return mgo.Collection(coll)
 }

@@ -3,9 +3,10 @@ package gateway
 import (
 	"log"
 
-	"github.com/SteinsElite/pickGinS/internal/gateway/pickrouter"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/SteinsElite/pickGinS/internal/gateway/pickrouter"
 )
 
 // This file is a wrapper to interact  with the contract on the heco

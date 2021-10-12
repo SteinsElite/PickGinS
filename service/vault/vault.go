@@ -107,11 +107,12 @@ func getQualifiedProfitFromDb(ticks []int64) []ValuePair {
 	var profits []ValuePair
 	for _, v := range ticks {
 		opt := options.Find()
-		opt.SetSort(bson.D{{"timestamp", 1}})
+		opt.SetSort(bson.D{{"timestamp", -1}})
 		opt.SetLimit(1)
+		// find record that timestamp is less than or equal to the tick time
 		cur, err := coll.Find(
 			context.TODO(),
-			bson.D{{"timestamp", bson.D{{"$gte", v}}}},
+			bson.D{{"timestamp", bson.D{{"$lte", v}}}},
 			opt,
 		)
 		if err != nil {

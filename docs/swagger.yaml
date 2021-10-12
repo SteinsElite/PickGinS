@@ -1,23 +1,11 @@
 basePath: /api/v1
-definitions:
-  notification.Notification:
-    properties:
-      category:
-        type: string
-      content:
-        type: string
-      timeStamp:
-        type: integer
-      title:
-        type: string
-    type: object
 info:
   contact: {}
-  description: API to get data from blockchain
+  description: API to interact with the pick finance backend
   title: pick finance api
-  version: "1.0"
+  version: 0.0.1
 paths:
-  /api/v1/auth/{address}/add_publisher:
+  /auth/{address}/add_publisher:
     post:
       description: add new publisher who is ability to publish new notification(
       parameters:
@@ -47,7 +35,7 @@ paths:
         "200":
           description: ""
       summary: add new publisher
-  /api/v1/auth/keyword_hash:
+  /auth/keyword_hash:
     get:
       description: the keyword hash is sign by the account to make sure that the account
         is accessed
@@ -61,14 +49,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            items:
-              type: integer
-            type: array
+          description: keyword hash
+        "400":
+          description: invalid param
+        "403":
+          description: not authorized
       summary: get the keywordHash to sign
-  /api/v1/chart/profit:
+  /chart/profit:
     get:
+      description: gets the profit in a time range
       parameters:
       - description: the duration to query-{7D,1M,1Y}
         in: query
@@ -81,16 +70,18 @@ paths:
         "200":
           description: the [(timestamp,profit)] in the time range
       summary: get the phased profit info
-  /api/v1/chart/ratio:
+  /chart/ratio:
     get:
+      description: gets the ratio of each asset info
       produces:
       - application/json
       responses:
         "200":
           description: amount of each asset in usd
       summary: get the ratio info
-  /api/v1/chart/volume:
+  /chart/volume:
     get:
+      description: gets the volume of each asset in usd
       parameters:
       - description: the duration to query-{7D,1M,1Y}
         in: query
@@ -103,7 +94,7 @@ paths:
         "200":
           description: the [(timestamp,volume)] in the time range
       summary: get the total volume info
-  /api/v1/notification:
+  /notification:
     get:
       description: obtains the specific notification by the tag
       parameters:
@@ -126,13 +117,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/notification.Notification'
-            type: array
+          description: array of notification
       summary: get notification info
-  /api/v1/notification/{publisher}:
+  /notification/{publisher}:
     post:
       description: publish new notification with title, content, category
       parameters:
@@ -158,7 +145,7 @@ paths:
         type: string
       - description: 'the category of the notification: { QuotaUpdate, Weekly, Activity}'
         in: formData
-        name: category
+        name: tag
         required: true
         type: string
       produces:
@@ -167,8 +154,9 @@ paths:
         "200":
           description: ""
       summary: publish new notification
-  /api/v1/price_info/{coin}:
+  /price_info/{coin}:
     get:
+      description: gets the Coin Price info and trend
       parameters:
       - description: '{BTC,ETH,USDT,HT,MDX}'
         in: path
@@ -179,10 +167,12 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'the price trend of coin, {"rate": ..., "trend": ...}'
+          description: 'the price trend of coin, {trend_info:{"rate": ..., "trend":
+            ...}}'
       summary: get the Coin Price info and trend
-  /api/v1/transaction/{address}:
+  /transaction/{address}:
     get:
+      description: gets the history transaction of specific account
       parameters:
       - description: user account address
         in: path
@@ -208,10 +198,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: the transaction of the page
+          description: a page of transaction and the total transaction amount-{"transaction
         "400":
-          description: Invalid params
+          description: invalid params
         "500":
-          description: Server error
+          description: server error
       summary: get the transaction info
 swagger: "2.0"

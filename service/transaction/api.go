@@ -13,36 +13,45 @@ import (
 
 // The Api Function to interact with the transaction module
 
-func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord, error) {
+// LoadTxFromDb query transaction in db and return with valid tx record and total count of
+// specific record
+func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord, int64, error) {
 	coll := storage.AccessCollections(txColl)
-
-	opt := options.Find()
-	opt.SetLimit(pageSize)
-	opt.SetSkip((page - 1) * pageSize)
-	opt.SetSort(bson.D{{"timestamp", -1}})
 
 	var filter bson.D
 	if tag == "" {
 		filter = bson.D{{"user", address}}
 	} else {
-		filter = bson.D{{"user", address}, bson.E{Key: "tx_type", Value: tag}}
+		filter = bson.D{{"user", address}, {"tx_type", tag}}
 	}
+
+	count, err := coll.CountDocuments(
+		context.TODO(),
+		filter,
+	)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var result []TxRecord
+	opt := options.Find()
+	opt.SetLimit(pageSize)
+	opt.SetSkip((page - 1) * pageSize)
+	opt.SetSort(bson.D{{"timestamp", -1}})
 	cur, err := coll.Find(
 		context.TODO(),
 		filter,
 		opt,
 	)
 	if err != nil {
-		log.Println(err)
-		return nil, err
+		return nil, 0, err
 	}
 	defer cur.Close(context.TODO())
-	var result []TxRecord
+
 	if err = cur.All(context.TODO(), &result); err != nil {
-		log.Println(err)
-		return nil, err
+		return nil, 0, err
 	}
-	return result, nil
+	return result, count, nil
 }
 
 // PollTxInterval will poll the contract periodic to get recent transaction info and persist it

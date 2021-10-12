@@ -13,6 +13,7 @@ func main() {
 	coin.StartCoinInfoWatcher()
 	vault.StartVaultWatcher()
 
+	router.InitAuth()
 	// start the api server
 	r := router.SetupGinServer()
 	r.Run(":8080")

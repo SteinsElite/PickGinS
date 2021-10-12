@@ -37,21 +37,26 @@ func PublishNotification(notification Notification) error {
 	return nil
 }
 
-// GetNotification if noti is null string "", it mean that we should get all the notification
-func GetNotification(notification string, page int64, pageSize int64) []Notification {
+// GetNotification if notification is null string "",
+// it means that we should get all the notification
+func GetNotification(notification string, page int64, pageSize int64) ([]Notification, int64) {
 	coll := storage.AccessCollections(Coll)
-
-	opt := options.Find()
-	opt.SetLimit(pageSize)
-	opt.SetSkip((page - 1) * pageSize)
-	opt.SetSort(bson.D{{"TimeStamp", -1}})
-
 	var filter bson.D
 	if notification == "" {
 		filter = bson.D{}
 	} else {
-		filter = bson.D{{"Category", notification}}
+		filter = bson.D{{"category", notification}}
 	}
+
+	count, _ := coll.CountDocuments(
+		context.TODO(),
+		filter,
+	)
+	opt := options.Find()
+	opt.SetLimit(pageSize)
+	opt.SetSkip((page - 1) * pageSize)
+	opt.SetSort(bson.D{{"timeStamp", -1}})
+
 	cur, err := coll.Find(
 		context.TODO(),
 		filter,
@@ -60,9 +65,9 @@ func GetNotification(notification string, page int64, pageSize int64) []Notifica
 	if err != nil {
 		log.Println(err)
 	}
-	
+
 	var notifications []Notification
 	cur.All(context.TODO(), &notifications)
 	defer cur.Close(context.TODO())
-	return notifications
+	return notifications,count
 }

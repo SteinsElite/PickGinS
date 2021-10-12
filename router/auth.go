@@ -41,6 +41,13 @@ func IsAuth(addr string, sig string) bool {
 // InitAuth store the first root account in the db to publish the notification
 func InitAuth() {
 	coll := storage.AccessCollections("auth")
+	count, _ := coll.CountDocuments(
+		context.TODO(),
+		bson.D{},
+	)
+	if count > 0 {
+		return
+	}
 	_, err := coll.InsertOne(context.TODO(), AuthAccount{
 		Address:  common.HexToAddress(RootAddr),
 		WordHash: crypto.Keccak256Hash([]byte(RootWord)).Bytes(),
@@ -74,7 +81,7 @@ func getAuthWord(address string) []byte {
 	return nil
 }
 
-func SetNewPublisher(address string, word string){
+func SetNewPublisher(address string, word string) {
 	coll := storage.AccessCollections("auth")
 	_, err := coll.InsertOne(context.TODO(), AuthAccount{
 		Address:  common.HexToAddress(address),

@@ -1,8 +1,10 @@
 package util
 
 import (
-	"github.com/ethereum/go-ethereum/crypto"
+	"encoding/json"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestVerifySignature(t *testing.T) {
@@ -10,10 +12,14 @@ func TestVerifySignature(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data := []byte("pick")
-	dataHash := crypto.Keccak256Hash(data)
-	t.Log(dataHash.Hex())
+	data := []byte("PICK")
 
+	dataHash := crypto.Keccak256Hash(data)
+
+	t.Log(dataHash.Bytes())
+	k,_:= json.Marshal(dataHash.Bytes())
+	t.Log(k)
+	t.Log(string(k))
 	sig, err := crypto.Sign(dataHash.Bytes(), privateKey)
 	if err != nil {
 		t.Fatal(err)

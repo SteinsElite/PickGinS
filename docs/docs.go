@@ -23,7 +23,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/auth/keyword_hash": {
+        "/auth/keyword_hash": {
             "get": {
                 "description": "the keyword hash is sign by the account to make sure that the account is accessed",
                 "produces": [
@@ -41,18 +41,18 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        }
+                        "description": "keyword hash"
+                    },
+                    "400": {
+                        "description": "invalid param"
+                    },
+                    "403": {
+                        "description": "not authorized"
                     }
                 }
             }
         },
-        "/api/v1/auth/{address}/add_publisher": {
+        "/auth/{address}/add_publisher": {
             "post": {
                 "description": "add new publisher who is ability to publish new notification(",
                 "produces": [
@@ -96,8 +96,9 @@ var doc = `{
                 }
             }
         },
-        "/api/v1/chart/profit": {
+        "/chart/profit": {
             "get": {
+                "description": "gets the profit in a time range",
                 "produces": [
                     "application/json"
                 ],
@@ -118,8 +119,9 @@ var doc = `{
                 }
             }
         },
-        "/api/v1/chart/ratio": {
+        "/chart/ratio": {
             "get": {
+                "description": "gets the ratio of each asset info",
                 "produces": [
                     "application/json"
                 ],
@@ -131,8 +133,9 @@ var doc = `{
                 }
             }
         },
-        "/api/v1/chart/volume": {
+        "/chart/volume": {
             "get": {
+                "description": "gets the volume of each asset in usd",
                 "produces": [
                     "application/json"
                 ],
@@ -153,7 +156,7 @@ var doc = `{
                 }
             }
         },
-        "/api/v1/notification": {
+        "/notification": {
             "get": {
                 "description": "obtains the specific notification by the tag",
                 "produces": [
@@ -184,18 +187,12 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/notification.Notification"
-                            }
-                        }
+                        "description": "array of notification"
                     }
                 }
             }
         },
-        "/api/v1/notification/{publisher}": {
+        "/notification/{publisher}": {
             "post": {
                 "description": "publish new notification with title, content, category",
                 "produces": [
@@ -234,7 +231,7 @@ var doc = `{
                     {
                         "type": "string",
                         "description": "the category of the notification: { QuotaUpdate, Weekly, Activity}",
-                        "name": "category",
+                        "name": "tag",
                         "in": "formData",
                         "required": true
                     }
@@ -246,8 +243,9 @@ var doc = `{
                 }
             }
         },
-        "/api/v1/price_info/{coin}": {
+        "/price_info/{coin}": {
             "get": {
+                "description": "gets the Coin Price info and trend",
                 "produces": [
                     "application/json"
                 ],
@@ -263,13 +261,14 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "the price trend of coin, {\"rate\": ..., \"trend\": ...}"
+                        "description": "the price trend of coin, {trend_info:{\"rate\": ..., \"trend\": ...}}"
                     }
                 }
             }
         },
-        "/api/v1/transaction/{address}": {
+        "/transaction/{address}": {
             "get": {
+                "description": "gets the history transaction of specific account",
                 "produces": [
                     "application/json"
                 ],
@@ -305,33 +304,14 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "the transaction of the page"
+                        "description": "a page of transaction and the total transaction amount-{\"transaction"
                     },
                     "400": {
-                        "description": "Invalid params"
+                        "description": "invalid params"
                     },
                     "500": {
-                        "description": "Server error"
+                        "description": "server error"
                     }
-                }
-            }
-        }
-    },
-    "definitions": {
-        "notification.Notification": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "timeStamp": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
                 }
             }
         }
@@ -349,12 +329,12 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "1.0",
+	Version:     "0.0.1",
 	Host:        "",
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
 	Title:       "pick finance api",
-	Description: "API to get data from blockchain",
+	Description: "API to interact with the pick finance backend",
 }
 
 type s struct{}

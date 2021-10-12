@@ -19,15 +19,17 @@ var (
 
 // symbol of token
 const (
+
+	// coin symbol
+
 	BTC  = "BTC"
 	ETH  = "ETH"
 	USDT = "USDT"
 	HT   = "HT"
 	MDX  = "MDX"
-)
 
-// ids to query info from 3rd-party price-info api
-const (
+	// coin Ids to query from coinGecko api
+
 	BTCIds  = "bitcoin"
 	ETHIds  = "ethereum"
 	USDTIds = "tether"
@@ -76,21 +78,3 @@ func TokenIds(coinSymbol string) (ids string, err error) {
 	}
 	return
 }
-
-// func TokenAddr(coin string) (addr common.Address, err error) {
-// 	switch coin {
-// 	case BTC:
-// 		addr = BTCAddr
-// 	case ETH:
-// 		addr = ETHAddr
-// 	case USDT:
-// 		addr = USDTAddr
-// 	case HT:
-// 		addr = HTAddr
-// 	case MDX:util
-// 		addr = MDXAddr
-// 	default:
-// 		err = fmt.Errorf("unrecognized Token")
-// 	}
-// 	return
-// }

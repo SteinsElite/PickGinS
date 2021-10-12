@@ -17,7 +17,7 @@ func AssetRatio() map[string]float64 {
 }
 
 // PhasedVolume get the [(timestamp, volumeValue)] in a specific time range
-func PhasedVolume(phase string) []ValuePair {
+func PhasedVolume(phase string) ([]ValuePair, int64) {
 	startTime, _ := queryStartTimeForVolume(phase)
 	qualifiedStats := getQualifiedStatsFromDb(startTime)
 	// when query the volume, we should include the query time now
@@ -31,7 +31,7 @@ func PhasedVolume(phase string) []ValuePair {
 			Value:     volumeValue(qualifiedStats[i]),
 		}
 	}
-	return volumeUsd
+	return volumeUsd, startTime
 }
 
 // PhasedProfit get the [(timestamp, profit)] in the period of time

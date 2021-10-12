@@ -135,7 +135,7 @@ var doc = `{
         },
         "/chart/volume": {
             "get": {
-                "description": "gets the volume of each asset in usd",
+                "description": "gets the volume of each asset in usd, and the start of the query timestamp",
                 "produces": [
                     "application/json"
                 ],
@@ -151,7 +151,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "the [(timestamp,volume)] in the time range"
+                        "description": "the {startTime: ..., volume: ...} in the time range"
                     }
                 }
             }

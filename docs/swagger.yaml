@@ -81,7 +81,8 @@ paths:
       summary: get the ratio info
   /chart/volume:
     get:
-      description: gets the volume of each asset in usd
+      description: gets the volume of each asset in usd, and the start of the query
+        timestamp
       parameters:
       - description: the duration to query-{7D,1M,1Y}
         in: query
@@ -92,7 +93,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: the [(timestamp,volume)] in the time range
+          description: 'the {startTime: ..., volume: ...} in the time range'
       summary: get the total volume info
   /notification:
     get:

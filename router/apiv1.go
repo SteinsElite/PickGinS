@@ -63,9 +63,9 @@ func GetTransaction(c *gin.Context) {
 
 // GetVolume godoc
 // @Summary get the total volume info
-// @Description gets the volume of each asset in usd
+// @Description gets the volume of each asset in usd, and the start of the query timestamp
 // @Produce  json
-// @Success 200 "the [(timestamp,volume)] in the time range"
+// @Success 200 "the {startTime: ..., volume: ...} in the time range"
 // @Param range query string true "the duration to query-{7D,1M,1Y}"
 // @Router /chart/volume [get]
 func GetVolume(c *gin.Context) {
@@ -76,8 +76,9 @@ func GetVolume(c *gin.Context) {
 			"message": "range should be one of {7D,1M,1Y}",
 		})
 	}
-	values := vault.PhasedVolume(phase)
+	values, startTime := vault.PhasedVolume(phase)
 	c.JSON(200, gin.H{
+		"startTime": startTime,
 		"volume": values,
 	})
 }

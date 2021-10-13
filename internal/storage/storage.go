@@ -30,7 +30,7 @@ func connectToDB(uri, dbname string, num uint64) {
 	defer cancel()
 	opt := options.Client().ApplyURI(uri)
 	opt.SetMaxPoolSize(num)
-	//ping will try to select a server until the client's server selection timeout expires.
+	// ping will try to select a server until the client's server selection timeout expires.
 	opt.SetServerSelectionTimeout(timeout * time.Second)
 	client, err := mongo.Connect(ctx, opt)
 	if err != nil {

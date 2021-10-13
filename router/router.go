@@ -28,10 +28,9 @@ func SetupGinServer() *gin.Engine {
 	apiv1.GET("/", func(c *gin.Context) {
 		c.JSON(200, "pick finance api v1")
 	})
-	
+
 	apiv1.GET("/transaction/:address", GetTransaction)
 	apiv1.GET("/price_info/:coin", GetCoinPriceInfo)
-
 
 	apiv1.GET("/notification", GetNotification)
 
@@ -40,9 +39,7 @@ func SetupGinServer() *gin.Engine {
 	apiv1.GET("/chart/profit", GetProfit)
 	apiv1.GET("/chart/ratio", GetRatio)
 
-	apiv1.GET("/auth/keyword_hash", GetKeyWordHash)
-	apiv1.POST("/auth/:address/add_publisher", AddPublisher)
-	apiv1.POST("/notification/:publisher", PublishNotification)
+	apiv1.POST("/notification", PublishNotification)
 
 	return r
 }

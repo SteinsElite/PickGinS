@@ -4,13 +4,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/SteinsElite/pickGinS/internal/auth"
 	"github.com/gin-gonic/gin"
 
 	"github.com/SteinsElite/pickGinS/service/coin"
 	"github.com/SteinsElite/pickGinS/service/notification"
 	"github.com/SteinsElite/pickGinS/service/transaction"
 	"github.com/SteinsElite/pickGinS/service/vault"
-	"github.com/SteinsElite/pickGinS/util"
 )
 
 // GetTransaction godoc
@@ -79,7 +79,7 @@ func GetVolume(c *gin.Context) {
 	values, startTime := vault.PhasedVolume(phase)
 	c.JSON(200, gin.H{
 		"startTime": startTime,
-		"volume": values,
+		"volume":    values,
 	})
 }
 
@@ -175,79 +175,21 @@ func GetNotification(c *gin.Context) {
 	})
 }
 
-// GetKeyWordHash godoc
-// @summary get the keywordHash to sign
-// @description the keyword hash is sign by the account to make sure that the account is accessed
-// @produce json
-// @param address query string true "the address of the keyword bind to"
-// @success 200 "keyword hash"
-// @failure 400 "invalid param"
-// @failure 403 "not authorized"
-// @router /auth/keyword_hash [get]
-func GetKeyWordHash(c *gin.Context) {
-	accountAddr := c.Query("address")
-	if !util.IsValidAddress(accountAddr) {
-		c.JSON(400, gin.H{
-			"error":   "Invalid params",
-			"message": "address is not valid ethereum address",
-		})
-		return
-	}
-	word := getAuthWord(accountAddr)
-	if word == nil {
-		c.JSON(403, gin.H{
-			"error":   "Fail to getAuthWord",
-			"message": "the address is not register as admin",
-		})
-		return
-	}
-	c.JSON(200, gin.H{
-		"keyword_hash": word,
-	})
-}
-
-// AddPublisher godoc
-// @summary add new publisher
-// @description add new publisher who is ability to publish new notification(
-// only publisher could add publisher)
-// @produce json
-// @param address path string true "the publisher address is login now"
-// @param signature formData string true "signature of the publisher address"
-// @param new_publisher formData string true "the address of new publisher to add"
-// @param keyword formData string true "the keyword been used to sign"
-// @success 200
-// @router /auth/{address}/add_publisher [post]
-func AddPublisher(c *gin.Context) {
-	adminAddr := c.Param("address")
-	sig := c.PostForm("signature")
-	newPublisher := c.PostForm("new_publisher")
-	keyword := c.PostForm("keyword")
-
-	if !IsAuth(adminAddr, sig) {
-		c.JSON(403, gin.H{
-			"error":   "not permission",
-			"message": "current account is not the publisher",
-		})
-		return
-	}
-	SetNewPublisher(newPublisher, keyword)
-}
-
 // PublishNotification godoc
 // @summary publish new notification
 // @description publish new notification with title, content, category
 // @produce json
-// @param publisher path string true "the publisher address"
-// @param signature formData string true "the signature of the publisher"
+// @param raw_data formData string true "the hash of specific information to sign"
+// @param signature formData string true "the signature of the raw_data by the publisher"
 // @param title formData string true "the title of the notification"
 // @param content formData string true "the content of the notification"
 // @param tag formData string true "the category of the notification: { QuotaUpdate, Weekly, Activity}"
 // @success 200
-// @router /notification/{publisher} [post]
+// @router /notification [post]
 func PublishNotification(c *gin.Context) {
-	publisher := c.Param("publisher")
+	rawData := c.Param("raw_data")
 	signature := c.PostForm("signature")
-	if !IsAuth(publisher, signature) {
+	if !auth.IsPublisher(rawData, signature) {
 		c.JSON(403, gin.H{
 			"error":   "invalid publisher",
 			"message": "current account is not the valid publisher",

@@ -2,21 +2,20 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // package storage provide access to the database, there is a package global
 // point mgo represent the connector
 
 const (
-	timeout     = 10
+	timeout     = 2
 	mongouri    = "mongodb://localhost:27017"
-	dbname      = "pick"
 	maxpoolsize = 100
 )
 
@@ -31,18 +30,23 @@ func connectToDB(uri, dbname string, num uint64) {
 	defer cancel()
 	opt := options.Client().ApplyURI(uri)
 	opt.SetMaxPoolSize(num)
+	//ping will try to select a server until the client's server selection timeout expires.
+	opt.SetServerSelectionTimeout(timeout * time.Second)
 	client, err := mongo.Connect(ctx, opt)
 	if err != nil {
-		fmt.Println(err)
+		// when we fail to connect to the database, we should stop the program
+		log.Fatal(err)
+	}
+	// Call Ping to verify that the deployment is up and the Client was
+	// configured successfully. As mentioned in the Ping documentation, this
+	// reduces application resiliency as the server may be temporarily
+	// unavailable when Ping is called.
+	if err = client.Ping(context.TODO(), readpref.Primary()); err != nil {
+		log.Fatal(err)
 	}
 	mgo = client.Database(dbname)
 }
 
 func AccessCollections(coll string) *mongo.Collection {
-	if mgo == nil {
-		// if mgo isn't initialized yet when we first access the collection, initialize it
-		InitDB(dbname)
-		log.Println("init the db: ", dbname)
-	}
 	return mgo.Collection(coll)
 }

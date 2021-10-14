@@ -23,79 +23,6 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/keyword_hash": {
-            "get": {
-                "description": "the keyword hash is sign by the account to make sure that the account is accessed",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "get the keywordHash to sign",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "the address of the keyword bind to",
-                        "name": "address",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "keyword hash"
-                    },
-                    "400": {
-                        "description": "invalid param"
-                    },
-                    "403": {
-                        "description": "not authorized"
-                    }
-                }
-            }
-        },
-        "/auth/{address}/add_publisher": {
-            "post": {
-                "description": "add new publisher who is ability to publish new notification(",
-                "produces": [
-                    "application/json"
-                ],
-                "summary": "add new publisher",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "the publisher address is login now",
-                        "name": "address",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "signature of the publisher address",
-                        "name": "signature",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "the address of new publisher to add",
-                        "name": "new_publisher",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "the keyword been used to sign",
-                        "name": "keyword",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/chart/profit": {
             "get": {
                 "description": "gets the profit in a time range",
@@ -190,9 +117,7 @@ var doc = `{
                         "description": "array of notification"
                     }
                 }
-            }
-        },
-        "/notification/{publisher}": {
+            },
             "post": {
                 "description": "publish new notification with title, content, category",
                 "produces": [
@@ -202,14 +127,14 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "the publisher address",
-                        "name": "publisher",
-                        "in": "path",
+                        "description": "the hash of specific information to sign",
+                        "name": "raw_data",
+                        "in": "formData",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "the signature of the publisher",
+                        "description": "the signature of the raw_data by the publisher",
                         "name": "signature",
                         "in": "formData",
                         "required": true

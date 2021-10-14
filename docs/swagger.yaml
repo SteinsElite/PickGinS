@@ -5,56 +5,6 @@ info:
   title: pick finance api
   version: 0.0.1
 paths:
-  /auth/{address}/add_publisher:
-    post:
-      description: add new publisher who is ability to publish new notification(
-      parameters:
-      - description: the publisher address is login now
-        in: path
-        name: address
-        required: true
-        type: string
-      - description: signature of the publisher address
-        in: formData
-        name: signature
-        required: true
-        type: string
-      - description: the address of new publisher to add
-        in: formData
-        name: new_publisher
-        required: true
-        type: string
-      - description: the keyword been used to sign
-        in: formData
-        name: keyword
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-      summary: add new publisher
-  /auth/keyword_hash:
-    get:
-      description: the keyword hash is sign by the account to make sure that the account
-        is accessed
-      parameters:
-      - description: the address of the keyword bind to
-        in: query
-        name: address
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: keyword hash
-        "400":
-          description: invalid param
-        "403":
-          description: not authorized
-      summary: get the keywordHash to sign
   /chart/profit:
     get:
       description: gets the profit in a time range
@@ -120,16 +70,15 @@ paths:
         "200":
           description: array of notification
       summary: get notification info
-  /notification/{publisher}:
     post:
       description: publish new notification with title, content, category
       parameters:
-      - description: the publisher address
-        in: path
-        name: publisher
+      - description: the hash of specific information to sign
+        in: formData
+        name: raw_data
         required: true
         type: string
-      - description: the signature of the publisher
+      - description: the signature of the raw_data by the publisher
         in: formData
         name: signature
         required: true

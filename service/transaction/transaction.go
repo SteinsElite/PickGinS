@@ -25,8 +25,8 @@ const (
 	interval  = hecoBatch * 3
 	// indicate that the block that the pickRouter contract deploy transaction is included
 	geniusBlock = 8121824
-	hecoLimit   = 5000
-	txColl      = "transaction"
+	hecoLimit = 5000
+	collName  = "transaction"
 )
 
 var (
@@ -71,7 +71,7 @@ func newTxWatcher(currentBlock int64) *TxWatcher {
 // InitTxWatcher the tx watcher is context related, so when we restart the application,
 // we should recovery the currentBlock
 func InitTxWatcher() *TxWatcher {
-	coll := storage.AccessCollections(txColl)
+	coll := storage.AccessCollections(collName)
 	// get the tx record with the biggest block number in the database
 	opt := options.Find()
 	opt.SetSort(bson.D{{"block_number", -1}})
@@ -213,7 +213,7 @@ func (tw *TxWatcher) populateTxFromLog(vlog types.Log) (TxRecord, error) {
 // persist the transaction record in the database,
 // TODO(ERIJ): handle the error when fail to insert the transaction
 func persistRecord(txs []TxRecord) {
-	coll := storage.AccessCollections(txColl)
+	coll := storage.AccessCollections(collName)
 	for _, tx := range txs {
 		_, err := coll.InsertOne(context.TODO(), tx)
 		if err != nil {

@@ -10,9 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// package storage provide access to the database, there is a package global
-// point mgo represent the connector
-
 const (
 	timeout     = 2
 	mongouri    = "mongodb://localhost:27017"

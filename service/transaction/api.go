@@ -16,7 +16,7 @@ import (
 // LoadTxFromDb query transaction in db and return with valid tx record and total count of
 // specific record
 func LoadTxFromDb(page, pageSize int64, tag string, address string) ([]TxRecord, int64, error) {
-	coll := storage.AccessCollections(txColl)
+	coll := storage.AccessCollections(collName)
 
 	var filter bson.D
 	if tag == "" {

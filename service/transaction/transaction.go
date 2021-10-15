@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -25,8 +26,13 @@ const (
 	interval  = hecoBatch * 3
 	// indicate that the block that the pickRouter contract deploy transaction is included
 	geniusBlock = 8121824
-	hecoLimit = 5000
-	collName  = "transaction"
+	hecoLimit   = 5000
+	collName    = "transaction"
+)
+const (
+	Deposit     string = "deposit"
+	Withdraw    string = "withdraw"
+	ClaimProfit string = "claimProfit"
 )
 
 var (
@@ -34,11 +40,8 @@ var (
 	withdrawSigHash    = crypto.Keccak256Hash([]byte("Withdraw(address,address,uint256)"))
 	claimProfitSigHash = crypto.Keccak256Hash([]byte("ClaimProfit(address,address,uint256)"))
 )
-
-const (
-	Deposit     string = "deposit"
-	Withdraw    string = "withdraw"
-	ClaimProfit string = "claimProfit"
+var (
+	ErrUnmatched = errors.New("unmatched event")
 )
 
 type BlockSpan struct {
@@ -146,17 +149,21 @@ func (tw *TxWatcher) obtainTxRange(span BlockSpan) ([]TxRecord, error) {
 		ToBlock:   big.NewInt(span.ToBlock),
 		Addresses: []common.Address{tw.ContractAddr},
 	}
-	elogs, err := tw.RpcClient.Client.FilterLogs(context.TODO(), query)
+	elogs, err := tw.FilterLogs(query)
 	if err != nil {
 		return nil, err
 	}
 	for _, elog := range elogs {
 		tx, err := tw.populateTxFromLog(elog)
+		// unmatched error is expected -- no need to do anything
 		if err != nil {
-			log.Println("[populateTxFromLog]: ", err)
+			if !errors.Is(err, ErrUnmatched) {
+				return nil, fmt.Errorf("fail to populate tx %w", err)
+			}
 		} else {
 			txs = append(txs, tx)
 		}
+
 	}
 	return txs, nil
 }
@@ -194,30 +201,27 @@ func (tw *TxWatcher) populateTxFromLog(vlog types.Log) (TxRecord, error) {
 		tx.Token, _ = util.IdentifyToken(claimProfit.Token)
 		tx.Amount = util.Amount2Float(claimProfit.Value)
 	default:
-		return tx, fmt.Errorf("unmatched event")
+		return tx, ErrUnmatched
 	}
 
 	tx.BlockNumber = vlog.BlockNumber
-	blockHeader, err := tw.RpcClient.Client.HeaderByNumber(
-		context.TODO(),
-		big.NewInt(int64(tx.BlockNumber)),
-	)
+	timestamp, err := tw.TimestampByNumber(int64(tx.BlockNumber))
 	if err != nil {
 		return tx, err
 	}
-	tx.Timestamp = blockHeader.Time
+	tx.Timestamp = timestamp
 	tx.TxHash = vlog.TxHash.String()
 	return tx, nil
 }
 
-// persist the transaction record in the database,
-// TODO(ERIJ): handle the error when fail to insert the transaction
-func persistRecord(txs []TxRecord) {
+// persist the transaction record in the database
+func persistRecord(txs []TxRecord) error {
 	coll := storage.AccessCollections(collName)
 	for _, tx := range txs {
 		_, err := coll.InsertOne(context.TODO(), tx)
 		if err != nil {
-			log.Println("Fail to write to database due to: ", err)
+			return fmt.Errorf("fail persist record: %w", err)
 		}
 	}
+	return nil
 }

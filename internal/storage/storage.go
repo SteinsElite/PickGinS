@@ -12,7 +12,7 @@ import (
 
 const (
 	timeout     = 2
-	mongouri    = "mongodb://localhost:27017"
+	mongouri    = "mongodb://192.168.2.200:27017"
 	maxpoolsize = 100
 )
 

@@ -17,6 +17,7 @@ import (
 // @BasePath /api/v1
 
 func SetupGinServer() *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
 	ginLogger := middleware.GinzapWithConfig(

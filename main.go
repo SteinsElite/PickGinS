@@ -25,7 +25,7 @@ func main() {
 	// start each service
 	transaction.StartTxWatcher()
 	coin.StartCoinInfoWatcher()
-	vault.StartVaultWatcher()
+	vault.StartVaultCache()
 
 	// start the api server
 	r := router.SetupGinServer()

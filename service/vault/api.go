@@ -10,18 +10,22 @@ import (
 // AssetRatio get the ratio of each asset in the vault
 func AssetRatio() map[string]float64 {
 	ratio := make(map[string]float64)
-	for k, v := range vaultWatcher.stats.CoinAmount {
+	for k, v := range cacher.stats.CoinAmount {
 		ratio[k] = v * coin.GetCurrentCoinPrice(k)
 	}
 	return ratio
 }
 
 // PhasedVolume get the [(timestamp, volumeValue)] in a specific time range
-func PhasedVolume(phase string) ([]ValuePair, int64) {
+func PhasedVolume(phase string) ([]ValuePair, int64, error) {
+	// we have check that the phase is valid
 	startTime, _ := queryStartTimeForVolume(phase)
-	qualifiedStats := getQualifiedStatsFromDb(startTime)
+	qualifiedStats, err := getQualifiedStatsFromDb(startTime)
+	if err != nil {
+		return nil, 0, err
+	}
 	// when query the volume, we should include the query time now
-	qualifiedStats = append(qualifiedStats, vaultWatcher.stats)
+	qualifiedStats = append(qualifiedStats, cacher.stats)
 
 	volumeUsd := make([]ValuePair, len(qualifiedStats))
 
@@ -31,17 +35,21 @@ func PhasedVolume(phase string) ([]ValuePair, int64) {
 			Value:     volumeValue(qualifiedStats[i]),
 		}
 	}
-	return volumeUsd, startTime
+	return volumeUsd, startTime, nil
 }
 
 // PhasedProfit get the [(timestamp, profit)] in the period of time
-func PhasedProfit(phase string) []ValuePair {
+func PhasedProfit(phase string) ([]ValuePair, error) {
+	// we have check that the phase is valid
 	ticks, _ := queryTimeTickForProfit(phase)
-	profitPair := getQualifiedProfitFromDb(ticks)
+	profitPair, err := getQualifiedProfitFromDb(ticks)
+	if err != nil {
+		return nil, err
+	}
 
 	profitPair = append(profitPair, ValuePair{
-		TimeStamp: vaultWatcher.stats.TimeStamp,
-		Value:     vaultWatcher.stats.Profit,
+		TimeStamp: cacher.stats.TimeStamp,
+		Value:     cacher.stats.Profit,
 	})
 	var profitUsd []ValuePair
 
@@ -52,7 +60,7 @@ func PhasedProfit(phase string) []ValuePair {
 			Value:     profitValue(deltaProfit),
 		})
 	}
-	return profitUsd
+	return profitUsd, nil
 }
 
 // get the start timestamp of volume status for query the database
@@ -87,7 +95,7 @@ func queryTimeTickForProfit(phase string) (timetick []int64, err error) {
 		}
 	case Month:
 		// we suspend get the latest 30 data
-			for i := 30; i > 0; i-- {
+		for i := 30; i > 0; i-- {
 			tick := midnight.AddDate(0, 0, -1*i)
 			timetick = append(timetick, tick.Unix())
 		}

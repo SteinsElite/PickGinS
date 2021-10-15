@@ -76,7 +76,10 @@ func GetVolume(c *gin.Context) {
 			"message": "range should be one of {7D,1M,1Y}",
 		})
 	}
-	values, startTime := vault.PhasedVolume(phase)
+	values, startTime, err := vault.PhasedVolume(phase)
+	if err != nil {
+		c.AbortWithError(500, err)
+	}
 	c.JSON(200, gin.H{
 		"startTime": startTime,
 		"volume":    values,
@@ -98,7 +101,10 @@ func GetProfit(c *gin.Context) {
 			"message": "range should be one of {7D,1M,1Y}",
 		})
 	}
-	values := vault.PhasedProfit(phase)
+	values, err := vault.PhasedProfit(phase)
+	if err != nil {
+		c.AbortWithError(500, err)
+	}
 	c.JSON(200, gin.H{
 		"points": values,
 	})

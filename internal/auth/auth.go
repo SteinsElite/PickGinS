@@ -3,6 +3,9 @@ package auth
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"go.uber.org/zap"
+
+	"github.com/SteinsElite/pickGinS/logging"
 )
 
 const (
@@ -19,11 +22,15 @@ func IsPublisher(data string, sig string) bool {
 func VerifySignature(addr string, data []byte, sig []byte) bool {
 	sigPublicKey, err := crypto.SigToPub(data, sig)
 	if err != nil {
-		panic(err)
+		logging.Z().Error(
+			"[verifySig]",
+			zap.Any("error", err),
+		)
+		return false
 	}
 	sigAddress := crypto.PubkeyToAddress(*sigPublicKey)
 	if sigAddress == common.HexToAddress(addr) {
-		panic(err)
+		return true
 	}
 	return false
 }

@@ -17,7 +17,7 @@ import (
 // @summary get the transaction info
 // @description gets the history transaction of specific account
 // @produce  json
-// @success 200 "a page of transaction and the total transaction amount-{"transaction":...,
+// @success 200 "a page of transaction and the total transaction amount-{"transactions":...,
 // "count": ...}"
 // @failure 400 "invalid params"
 // @failure 500 "server error"
@@ -49,13 +49,13 @@ func GetTransaction(c *gin.Context) {
 	res, count, err := transaction.LoadTxFromDb(page, pageSize, tag, userAddr)
 	if err != nil {
 		c.JSON(500, gin.H{
-			"err": "internal error in server",
-			"msg": err,
+			"error":   "internal error in server",
+			"message": err,
 		})
 	} else {
 		c.JSON(200, gin.H{
-			"transaction": res,
-			"count":       count,
+			"transactions": res,
+			"count":        count,
 		})
 	}
 
@@ -78,7 +78,11 @@ func GetVolume(c *gin.Context) {
 	}
 	values, startTime, err := vault.PhasedVolume(phase)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.JSON(500, gin.H{
+			"error":   "GetVolume internal error",
+			"message": err,
+		})
+		return
 	}
 	c.JSON(200, gin.H{
 		"startTime": startTime,
@@ -103,7 +107,11 @@ func GetProfit(c *gin.Context) {
 	}
 	values, err := vault.PhasedProfit(phase)
 	if err != nil {
-		c.AbortWithError(500, err)
+		c.JSON(500, gin.H{
+			"error":   "GetProfit internal error",
+			"message": err,
+		})
+		return
 	}
 	c.JSON(200, gin.H{
 		"points": values,

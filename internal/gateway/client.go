@@ -98,17 +98,15 @@ func (rc *RpcClient) TimestampByNumber(blockNumber int64) (uint64, error) {
 	return blockHeader.Time, nil
 }
 
-func (rc *RpcClient) FilterLogs(query ethereum.FilterQuery)([]types.Log, error) {
+func (rc *RpcClient) FilterLogs(query ethereum.FilterQuery) ([]types.Log, error) {
 	elog, err := rc.Client.FilterLogs(context.TODO(), query)
+	err = rc.CheckInteractionWithContract(err)
 	if err != nil {
-		err = rc.CheckInteractionWithContract(err)
-		if err != nil {
-			return nil, err
-		}
-		elog, err = rc.Client.FilterLogs(context.TODO(), query)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
+	}
+	elog, err = rc.Client.FilterLogs(context.TODO(), query)
+	if err != nil {
+		return nil, err
 	}
 	return elog, nil
 }
@@ -128,6 +126,7 @@ func (rc *RpcClient) CheckInteractionWithContract(err error) error {
 		}
 		return fmt.Errorf("can't find availbe connection to blockchain")
 	}
+	return nil
 }
 
 // GetRpcClient get a rpc client to interact with the pickrouter contract

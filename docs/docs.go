@@ -229,7 +229,7 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "a page of transaction and the total transaction amount-{\"transaction"
+                        "description": "a page of transaction and the total transaction amount-{\"transactions"
                     },
                     "400": {
                         "description": "invalid params"
